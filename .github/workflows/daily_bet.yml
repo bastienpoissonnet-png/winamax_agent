@@ -9,6 +9,7 @@ on:
 jobs:
   run-daily-analysis:
     name: Scan des Marchés & Envoi Discord
+    runs-on: ubuntu-latest
     permissions:
       contents: write
 
