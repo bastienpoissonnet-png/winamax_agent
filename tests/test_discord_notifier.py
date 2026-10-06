@@ -4,8 +4,10 @@ import unittest
 from unittest.mock import MagicMock, patch
 from winamax_agent.models.parlays import ParlayLeg, ParlayOpportunity
 from winamax_agent.reporting.discord_notifier import (
+    DISCORD_COLOR_GRAY,
     DISCORD_COLOR_GREEN,
     DISCORD_COLOR_YELLOW,
+    format_compact_selection,
     format_discord_embed,
     send_discord_report,
 )
@@ -34,6 +36,7 @@ class TestDiscordNotifier(unittest.TestCase):
             point_2_h2h_tactics="H2H justification",
             point_3_context_form="Form justification",
             is_fallback=False,
+            pitch_dynamic="Nice concède très peu d'occasions franches à l'extérieur.",
         )
 
         self.sample_parlay = ParlayOpportunity(
@@ -65,7 +68,7 @@ class TestDiscordNotifier(unittest.TestCase):
             combined_ev=0.112,
             recommended_stake=15.0,
             stake_details="Kelly combiné",
-            cross_justification="Indépendance garantie",
+            cross_justification="Indépendance garantie entre Premier League et Ligue 1.",
             is_fallback=False,
         )
 
@@ -83,32 +86,55 @@ class TestDiscordNotifier(unittest.TestCase):
     def test_format_discord_embed_all_validated(self):
         payload = format_discord_embed(self.sample_report)
         self.assertIn("embeds", payload)
-        self.assertEqual(len(payload["embeds"]), 1)
+        # 5 distinct embeds: Header, MOTD, Top Rec, Parlay, Longshot
+        self.assertEqual(len(payload["embeds"]), 5)
 
-        embed = payload["embeds"][0]
-        self.assertEqual(embed["color"], DISCORD_COLOR_GREEN)
-        self.assertIn("2026-10-06", embed["title"])
-        self.assertEqual(len(embed["fields"]), 4)
+        # Embed 0: Header compact
+        header = payload["embeds"][0]
+        self.assertEqual(header["color"], DISCORD_COLOR_GREEN)
+        self.assertIn("2026-10-06", header["title"])
+        self.assertIn("Marchés scannés :", header["description"])
+        self.assertIn("Opportunités EV > 0 :", header["description"])
 
-        # Check fields content - minimaliste et sobre
-        motd_field = embed["fields"][0]
-        self.assertEqual(motd_field["name"], "MATCH DU JOUR [VALIDÉ]")
-        self.assertIn("Paris Saint Germain vs Nice", motd_field["value"])
-        self.assertIn("• Pari : Moins de 3.5 buts @ 1.55", motd_field["value"])
-        self.assertIn("• Mise : 10.00 € | EV : +0.9%", motd_field["value"])
+        # Embed 1: Match du Jour
+        motd = payload["embeds"][1]
+        self.assertEqual(motd["color"], DISCORD_COLOR_GREEN)
+        self.assertEqual(motd["title"], "MATCH DU JOUR [VALIDÉ]")
+        self.assertIn("Paris Saint Germain vs Nice", motd["description"])
+        self.assertIn("SELECTION", motd["description"])
+        self.assertIn("COTE", motd["description"])
+        self.assertIn("EV", motd["description"])
+        self.assertIn("PROB", motd["description"])
+        self.assertIn("Moins de 3.5 buts", motd["description"])
+        self.assertIn("1.55", motd["description"])
+        self.assertIn("💰 **Mise : 10.00 €**", motd["description"])
+        self.assertIn("🏟️ *Nice concède très peu d'occasions", motd["description"])
 
-        single_field = embed["fields"][1]
-        self.assertEqual(single_field["name"], "PARI SIMPLE [VALIDÉ]")
+        # Embed 2: Meilleur Pari Simple
+        single = payload["embeds"][2]
+        self.assertEqual(single["color"], DISCORD_COLOR_GREEN)
+        self.assertEqual(single["title"], "PARI SIMPLE [VALIDÉ]")
+        self.assertIn("Paris Saint Germain vs Nice", single["description"])
+        self.assertIn("💰 **Mise : 10.00 €**", single["description"])
 
-        parlay_field = embed["fields"][2]
-        self.assertEqual(parlay_field["name"], "COMBINÉ [VALIDÉ]")
-        self.assertIn("Cote totale : 1.86 | Prob : 59.8%", parlay_field["value"])
-        self.assertIn("• Arsenal ou Nul (1X) @ 1.35", parlay_field["value"])
-        self.assertIn("• Marseille ou Nul (1X) @ 1.38", parlay_field["value"])
-        self.assertIn("• Mise : 15.00 € | EV : +11.2%", parlay_field["value"])
+        # Embed 3: Combiné
+        parlay = payload["embeds"][3]
+        self.assertEqual(parlay["color"], DISCORD_COLOR_GREEN)
+        self.assertEqual(parlay["title"], "COMBINÉ [VALIDÉ]")
+        self.assertIn("MATCH", parlay["description"])
+        self.assertIn("PARI", parlay["description"])
+        self.assertIn("COTE", parlay["description"])
+        self.assertIn("Arsenal vs Chelsea", parlay["description"])
+        self.assertIn("Marseille vs Lyon", parlay["description"])
+        self.assertIn("COTE TOTALE : 1.86 | EV : +11.2%", parlay["description"])
+        self.assertIn("💰 **Mise conseillée : 15.00 €**", parlay["description"])
 
-        longshot_field = embed["fields"][3]
-        self.assertEqual(longshot_field["name"], "COTE OSÉE [VALIDÉ]")
+        # Embed 4: Cote Osée
+        longshot = payload["embeds"][4]
+        self.assertEqual(longshot["color"], DISCORD_COLOR_GREEN)
+        self.assertEqual(longshot["title"], "COTE OSÉE [VALIDÉ]")
+        self.assertIn("Paris Saint Germain vs Nice", longshot["description"])
+        self.assertIn("💰 **Mise : 10.00 €**", longshot["description"])
 
     def test_format_discord_embed_with_fallback(self):
         # Create a report with a fallback selection
@@ -145,11 +171,20 @@ class TestDiscordNotifier(unittest.TestCase):
         )
 
         payload = format_discord_embed(report_with_fb)
-        embed = payload["embeds"][0]
-        self.assertEqual(embed["color"], DISCORD_COLOR_YELLOW)
-        self.assertEqual(embed["fields"][0]["name"], "MATCH DU JOUR [SECOURS]")
-        self.assertIn("• Mise : 1.00 € (Option de secours)", embed["fields"][0]["value"])
-        self.assertEqual(embed["fields"][2]["name"], "COMBINÉ [AUCUN COMBINÉ]")
+        self.assertEqual(len(payload["embeds"]), 5)
+
+        # Header embed is yellow due to fallback
+        self.assertEqual(payload["embeds"][0]["color"], DISCORD_COLOR_YELLOW)
+
+        # MOTD embed has fallback status and yellow color
+        self.assertEqual(payload["embeds"][1]["title"], "MATCH DU JOUR [SECOURS]")
+        self.assertEqual(payload["embeds"][1]["color"], DISCORD_COLOR_YELLOW)
+        self.assertIn("💰 **Mise : 1.00 €** *(Option de secours)*", payload["embeds"][1]["description"])
+
+        # Parlay embed is gray (no parlay)
+        self.assertEqual(payload["embeds"][3]["title"], "COMBINÉ [AUCUN COMBINÉ]")
+        self.assertEqual(payload["embeds"][3]["color"], DISCORD_COLOR_GRAY)
+        self.assertIn("💰 **Mise : 0.00 €**", payload["embeds"][3]["description"])
 
     def test_format_discord_embed_empty_match_today(self):
         # When no match today or odds < 1.05
@@ -164,14 +199,13 @@ class TestDiscordNotifier(unittest.TestCase):
             longshot_recommendation=self.sample_rec,
         )
         payload = format_discord_embed(report_no_today)
-        embed = payload["embeds"][0]
-        motd_field = embed["fields"][0]
-        self.assertEqual(motd_field["name"], "MATCH DU JOUR [AUCUN PARI JOUABLE]")
-        self.assertIn("cotes < 1.05 ou calendrier vide", motd_field["value"])
-        self.assertIn("• Mise : 0.00 €", motd_field["value"])
+        motd_embed = payload["embeds"][1]
+        self.assertEqual(motd_embed["title"], "MATCH DU JOUR [AUCUN PARI JOUABLE]")
+        self.assertEqual(motd_embed["color"], DISCORD_COLOR_GRAY)
+        self.assertIn("cotes < 1.05 ou calendrier vide", motd_embed["description"])
+        self.assertIn("💰 **Mise : 0.00 €**", motd_embed["description"])
 
     def test_format_compact_selection(self):
-        from winamax_agent.reporting.discord_notifier import format_compact_selection
         self.assertEqual(format_compact_selection("Nul ou Nice (X2)"), "X2")
         self.assertEqual(format_compact_selection("Alavés ou Nul (1X)"), "1X")
         self.assertEqual(format_compact_selection("Victoire Atl. Madrid (1)"), "1")
@@ -233,13 +267,20 @@ class TestDiscordNotifier(unittest.TestCase):
             longshot_recommendation=self.sample_rec,
         )
         payload = format_discord_embed(report_with_sec)
-        embed = payload["embeds"][0]
-        self.assertEqual(len(embed["fields"]), 5)
+        # 6 distinct embeds when secondary recommendations exist
+        self.assertEqual(len(payload["embeds"]), 6)
 
-        sec_field = embed["fields"][4]
-        self.assertEqual(sec_field["name"], "AUTRES OPPORTUNITÉS (EV > 0)")
-        self.assertIn("• Lyon vs Nice : X2 @ 1.99 (+3.3% EV)", sec_field["value"])
-        self.assertIn("• Alavés vs Atl. Madrid : 1X @ 2.02 (+1.7% EV)", sec_field["value"])
+        sec_embed = payload["embeds"][5]
+        self.assertEqual(sec_embed["title"], "AUTRES OPPORTUNITÉS (EV > 0)")
+        self.assertEqual(sec_embed["color"], DISCORD_COLOR_GREEN)
+        self.assertIn("MATCH", sec_embed["description"])
+        self.assertIn("PARI", sec_embed["description"])
+        self.assertIn("COTE", sec_embed["description"])
+        self.assertIn("EV", sec_embed["description"])
+        self.assertIn("Lyon vs Nice", sec_embed["description"])
+        self.assertIn("Alavés vs Atl. Madrid", sec_embed["description"])
+        self.assertIn("1.99", sec_embed["description"])
+        self.assertIn("+3.3%", sec_embed["description"])
 
     def test_send_discord_report_empty_url(self):
         # Empty or placeholder URL returns False without making network request
@@ -271,4 +312,3 @@ class TestDiscordNotifier(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -6,13 +6,14 @@ import logging
 import urllib.error
 import urllib.request
 from datetime import datetime
-from typing import Any, Dict, Optional
-from winamax_agent.reporting.reporter import DailyReport
+from typing import Any, Dict, List, Optional
+from winamax_agent.reporting.reporter import BetRecommendation, DailyReport
 
 logger = logging.getLogger(__name__)
 
-DISCORD_COLOR_GREEN = 0x2ECC71  # 3066993 - All selections validated EV > 0
-DISCORD_COLOR_YELLOW = 0xF1C40F # 15844351 - Contains fallback / defensive recommendations
+DISCORD_COLOR_GREEN = 0x2ECC71   # 3066993 - Sélection validée (EV > 0)
+DISCORD_COLOR_YELLOW = 0xF1C40F  # 15844351 - Option de secours / défensive
+DISCORD_COLOR_GRAY = 0x95A5A6    # 9807270 - Aucun pari jouable / inactif
 
 
 def format_compact_selection(label: str) -> str:
@@ -47,171 +48,246 @@ def format_compact_selection(label: str) -> str:
     return label
 
 
+def _format_single_table(selection: str, odds: float, ev_pct: float, prob_pct: float) -> str:
+    """Formats aligned monospace text table for single bet / match of the day / longshot."""
+    header = f"{'SELECTION':<26}{'COTE':<9}{'EV':<8}{'PROB':<6}".rstrip()
+    sel_sub = (selection[:23] + "…") if len(selection) > 25 else selection
+    odds_str = f"{odds:.2f}"
+    ev_str = f"{ev_pct:+.1f}%"
+    prob_str = f"{prob_pct:.1f}%"
+    row = f"{sel_sub:<26}{odds_str:<9}{ev_str:<8}{prob_str:<6}".rstrip()
+    return f"```\n{header}\n{row}\n```"
+
+
+def _format_parlay_table(legs: list, total_odds: float, ev_pct: float, is_fallback: bool, prob_pct: float) -> str:
+    """Formats aligned monospace text table for parlay legs and summary."""
+    header = f"{'MATCH':<26}{'PARI':<9}{'COTE':<6}".rstrip()
+    lines = [header]
+    for leg in legs:
+        match_sub = (leg.match_title[:23] + "…") if len(leg.match_title) > 25 else leg.match_title
+        pari_sub = format_compact_selection(leg.selection)[:8]
+        cote_str = f"{leg.odds:.2f}"
+        lines.append(f"{match_sub:<26}{pari_sub:<9}{cote_str:<6}".rstrip())
+
+    if is_fallback:
+        summary = f"COTE TOTALE : {total_odds:.2f} | PROB : {prob_pct:.1f}%"
+    else:
+        summary = f"COTE TOTALE : {total_odds:.2f} | EV : {ev_pct:+.1f}%"
+    lines.append(summary)
+    return "```\n" + "\n".join(lines) + "\n```"
+
+
+def _format_secondary_table(recommendations: list) -> str:
+    """Formats aligned monospace text table for secondary opportunities."""
+    header = f"{'MATCH':<24}{'PARI':<9}{'COTE':<7}{'EV':<6}".rstrip()
+    lines = [header]
+    for r in recommendations:
+        match_sub = (r.match_title[:21] + "…") if len(r.match_title) > 23 else r.match_title
+        pari_sub = format_compact_selection(r.selection_label)[:8]
+        cote_str = f"{r.winamax_odds:.2f}"
+        ev_str = f"{r.ev_pct:+.1f}%"
+        lines.append(f"{match_sub:<24}{pari_sub:<9}{cote_str:<7}{ev_str:<6}".rstrip())
+    return "```\n" + "\n".join(lines) + "\n```"
+
+
 def format_discord_embed(report: DailyReport) -> Dict[str, Any]:
-    """Formats a rich Discord Embed representing the daily betting sections."""
+    """Formats a multi-embed Discord payload representing the daily betting sections as distinct cards."""
     date_display = report.timestamp.split()[0] if " " in report.timestamp else report.timestamp
 
-    # Determine embed color: yellow if any section is in fallback mode, green if all validated
+    # Check fallback status across all sections
     has_fallback = any([
         report.match_of_the_day and report.match_of_the_day.is_fallback,
         report.top_recommendation and report.top_recommendation.is_fallback,
         report.top_parlay and report.top_parlay.is_fallback,
         report.longshot_recommendation and report.longshot_recommendation.is_fallback,
     ])
-    embed_color = DISCORD_COLOR_YELLOW if has_fallback else DISCORD_COLOR_GREEN
 
-    fields = []
-
-    # -----------------------------------------------------------------
-    # Field 1 : Le Match du Jour
-    # -----------------------------------------------------------------
-    if not report.match_of_the_day:
-        fields.append({
-            "name": "MATCH DU JOUR [AUCUN PARI JOUABLE]",
-            "value": "Aucun pari jouable aujourd'hui (cotes < 1.05 ou calendrier vide)\n• Mise : 0.00 €",
-            "inline": False,
-        })
-    else:
-        m = report.match_of_the_day
-        status_tag = "[SECOURS]" if m.is_fallback else "[VALIDÉ]"
-        lines = [
-            f"{m.match_title}",
-            f"• Pari : {m.selection_label} @ {m.winamax_odds:.2f}",
-        ]
-        if m.is_fallback:
-            lines.append(f"• Mise : {m.stake_eur:.2f} € (Option de secours)")
-        else:
-            lines.append(f"• Mise : {m.stake_eur:.2f} € | EV : {m.ev_pct:+.1f}%")
-        if m.pitch_dynamic:
-            lines.append(f"• Terrain : *{m.pitch_dynamic}*")
-        fields.append({
-            "name": f"MATCH DU JOUR {status_tag}",
-            "value": "\n".join(lines),
-            "inline": False,
-        })
+    embeds: List[Dict[str, Any]] = []
 
     # -----------------------------------------------------------------
-    # Field 2 : Le Meilleur Pari Simple
+    # Embed 0 : Header compact
     # -----------------------------------------------------------------
-    if not report.top_recommendation:
-        fields.append({
-            "name": "PARI SIMPLE [AUCUN PARI JOUABLE]",
-            "value": "Aucun pari simple éligible cette semaine\n• Mise : 0.00 €",
-            "inline": False,
-        })
-    else:
-        rec = report.top_recommendation
-        status_tag = "[SECOURS]" if rec.is_fallback else "[VALIDÉ]"
-        lines = [
-            f"{rec.match_title}",
-            f"• Pari : {rec.selection_label} @ {rec.winamax_odds:.2f}",
-        ]
-        if rec.is_fallback:
-            lines.append(f"• Mise : {rec.stake_eur:.2f} € (Option de secours)")
-        else:
-            lines.append(f"• Mise : {rec.stake_eur:.2f} € | EV : {rec.ev_pct:+.1f}%")
-        if rec.pitch_dynamic:
-            lines.append(f"• Terrain : *{rec.pitch_dynamic}*")
-        fields.append({
-            "name": f"PARI SIMPLE {status_tag}",
-            "value": "\n".join(lines),
-            "inline": False,
-        })
-
-    # -----------------------------------------------------------------
-    # Field 3 : Le Meilleur Combiné
-    # -----------------------------------------------------------------
-    if not report.top_parlay:
-        fields.append({
-            "name": "COMBINÉ [AUCUN COMBINÉ]",
-            "value": "Nombre insuffisant de sélections pour un combiné\n• Mise : 0.00 €",
-            "inline": False,
-        })
-    else:
-        p = report.top_parlay
-        status_tag = "[SECOURS]" if p.is_fallback else "[VALIDÉ]"
-        lines = [
-            f"Cote totale : {p.total_odds:.2f} | Prob : {p.combined_prob_pct:.1f}%",
-        ]
-        for leg in p.legs:
-            lines.append(f"• {leg.selection} @ {leg.odds:.2f}")
-        if p.is_fallback:
-            lines.append(f"• Mise : {p.recommended_stake:.2f} €")
-        else:
-            lines.append(f"• Mise : {p.recommended_stake:.2f} € | EV : {p.combined_ev_pct:+.1f}%")
-        fields.append({
-            "name": f"COMBINÉ {status_tag}",
-            "value": "\n".join(lines),
-            "inline": False,
-        })
-
-    # -----------------------------------------------------------------
-    # Field 4 : La Cote Osée
-    # -----------------------------------------------------------------
-    if not report.longshot_recommendation:
-        fields.append({
-            "name": "COTE OSÉE [AUCUNE COTE]",
-            "value": "Aucune cote comprise entre 4.00 et 10.00 disponible\n• Mise : 0.00 €",
-            "inline": False,
-        })
-    else:
-        ls = report.longshot_recommendation
-        status_tag = "[SECOURS]" if ls.is_fallback else "[VALIDÉ]"
-        lines = [
-            f"{ls.match_title}",
-            f"• Pari : {ls.selection_label} @ {ls.winamax_odds:.2f}",
-        ]
-        if ls.is_fallback:
-            lines.append(f"• Mise : {ls.stake_eur:.2f} € (Option de secours)")
-        else:
-            lines.append(f"• Mise : {ls.stake_eur:.2f} € | EV : {ls.ev_pct:+.1f}%")
-        if ls.pitch_dynamic:
-            lines.append(f"• Terrain : *{ls.pitch_dynamic}*")
-        fields.append({
-            "name": f"COTE OSÉE {status_tag}",
-            "value": "\n".join(lines),
-            "inline": False,
-        })
-
-    # -----------------------------------------------------------------
-    # Field 5 : Autres Opportunités Détectées (EV > 0)
-    # -----------------------------------------------------------------
-    valid_secondary = [
-        r for r in report.secondary_recommendations
-        if not r.is_fallback and r.ev_pct > 0
-    ]
-    if valid_secondary:
-        sec_lines = []
-        for sec in valid_secondary:
-            short_sel = format_compact_selection(sec.selection_label)
-            sec_lines.append(
-                f"• {sec.match_title} : {short_sel} @ {sec.winamax_odds:.2f} ({sec.ev_pct:+.1f}% EV)"
-            )
-        fields.append({
-            "name": "AUTRES OPPORTUNITÉS (EV > 0)",
-            "value": "\n".join(sec_lines),
-            "inline": False,
-        })
-
-    embed = {
+    header_color = DISCORD_COLOR_YELLOW if has_fallback else (
+        DISCORD_COLOR_GREEN if (report.top_recommendation or report.match_of_the_day) else DISCORD_COLOR_GRAY
+    )
+    embed_header = {
         "title": f"🎯 Winamax Value Agent — Rapport du {date_display}",
         "description": (
             f"📊 **Marchés scannés :** {report.total_markets_analyzed} sur {report.total_matches_analyzed} rencontres\n"
             f"✨ **Opportunités EV > 0 :** {report.positive_ev_count}\n"
             f"📌 **Statut global :** {'🟡 *Attention : Présence d’options de secours*' if has_fallback else '🟢 *Toutes les opportunités sont validées (EV > 0)*'}"
         ),
-        "color": embed_color,
-        "fields": fields,
-        "footer": {
-            "text": "Winamax Value Betting Agent • Staking Kelly Fractionnaire • Jouer comporte des risques"
-        },
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "color": header_color,
     }
+    embeds.append(embed_header)
+
+    # -----------------------------------------------------------------
+    # Embed 1 : Match du Jour
+    # -----------------------------------------------------------------
+    if not report.match_of_the_day:
+        embeds.append({
+            "title": "MATCH DU JOUR [AUCUN PARI JOUABLE]",
+            "description": "Aucun pari jouable aujourd'hui (cotes < 1.05 ou calendrier vide)\n💰 **Mise : 0.00 €**",
+            "color": DISCORD_COLOR_GRAY,
+        })
+    else:
+        m = report.match_of_the_day
+        status_tag = "[SECOURS]" if m.is_fallback else "[VALIDÉ]"
+        card_color = DISCORD_COLOR_YELLOW if m.is_fallback else DISCORD_COLOR_GREEN
+        table = _format_single_table(
+            selection=m.selection_label,
+            odds=m.winamax_odds,
+            ev_pct=m.ev_pct,
+            prob_pct=m.model_true_prob_pct,
+        )
+        desc_lines = [
+            f"**{m.match_title}**",
+            table,
+        ]
+        if m.is_fallback:
+            desc_lines.append(f"💰 **Mise : {m.stake_eur:.2f} €** *(Option de secours)*")
+        else:
+            desc_lines.append(f"💰 **Mise : {m.stake_eur:.2f} €**")
+        if m.pitch_dynamic:
+            desc_lines.append(f"🏟️ *{m.pitch_dynamic}*")
+
+        embeds.append({
+            "title": f"MATCH DU JOUR {status_tag}",
+            "description": "\n".join(desc_lines),
+            "color": card_color,
+        })
+
+    # -----------------------------------------------------------------
+    # Embed 2 : Meilleur Pari Simple
+    # -----------------------------------------------------------------
+    if not report.top_recommendation:
+        embeds.append({
+            "title": "PARI SIMPLE [AUCUN PARI JOUABLE]",
+            "description": "Aucun pari simple éligible cette semaine\n💰 **Mise : 0.00 €**",
+            "color": DISCORD_COLOR_GRAY,
+        })
+    else:
+        rec = report.top_recommendation
+        status_tag = "[SECOURS]" if rec.is_fallback else "[VALIDÉ]"
+        card_color = DISCORD_COLOR_YELLOW if rec.is_fallback else DISCORD_COLOR_GREEN
+        table = _format_single_table(
+            selection=rec.selection_label,
+            odds=rec.winamax_odds,
+            ev_pct=rec.ev_pct,
+            prob_pct=rec.model_true_prob_pct,
+        )
+        desc_lines = [
+            f"**{rec.match_title}**",
+            table,
+        ]
+        if rec.is_fallback:
+            desc_lines.append(f"💰 **Mise : {rec.stake_eur:.2f} €** *(Option de secours)*")
+        else:
+            desc_lines.append(f"💰 **Mise : {rec.stake_eur:.2f} €**")
+        if rec.pitch_dynamic:
+            desc_lines.append(f"🏟️ *{rec.pitch_dynamic}*")
+
+        embeds.append({
+            "title": f"PARI SIMPLE {status_tag}",
+            "description": "\n".join(desc_lines),
+            "color": card_color,
+        })
+
+    # -----------------------------------------------------------------
+    # Embed 3 : Meilleur Combiné
+    # -----------------------------------------------------------------
+    if not report.top_parlay:
+        embeds.append({
+            "title": "COMBINÉ [AUCUN COMBINÉ]",
+            "description": "Nombre insuffisant de sélections pour un combiné\n💰 **Mise : 0.00 €**",
+            "color": DISCORD_COLOR_GRAY,
+        })
+    else:
+        p = report.top_parlay
+        status_tag = "[SECOURS]" if p.is_fallback else "[VALIDÉ]"
+        card_color = DISCORD_COLOR_YELLOW if p.is_fallback else DISCORD_COLOR_GREEN
+        table = _format_parlay_table(
+            legs=p.legs,
+            total_odds=p.total_odds,
+            ev_pct=p.combined_ev_pct,
+            is_fallback=p.is_fallback,
+            prob_pct=p.combined_prob_pct,
+        )
+        desc_lines = [
+            table,
+            f"💰 **Mise conseillée : {p.recommended_stake:.2f} €**",
+        ]
+        if p.cross_justification:
+            desc_lines.append(f"🏟️ *{p.cross_justification}*")
+
+        embeds.append({
+            "title": f"COMBINÉ {status_tag}",
+            "description": "\n".join(desc_lines),
+            "color": card_color,
+        })
+
+    # -----------------------------------------------------------------
+    # Embed 4 : Cote Osée
+    # -----------------------------------------------------------------
+    if not report.longshot_recommendation:
+        embeds.append({
+            "title": "COTE OSÉE [AUCUNE COTE]",
+            "description": "Aucune cote comprise entre 4.00 et 10.00 disponible\n💰 **Mise : 0.00 €**",
+            "color": DISCORD_COLOR_GRAY,
+        })
+    else:
+        ls = report.longshot_recommendation
+        status_tag = "[SECOURS]" if ls.is_fallback else "[VALIDÉ]"
+        card_color = DISCORD_COLOR_YELLOW if ls.is_fallback else DISCORD_COLOR_GREEN
+        table = _format_single_table(
+            selection=ls.selection_label,
+            odds=ls.winamax_odds,
+            ev_pct=ls.ev_pct,
+            prob_pct=ls.model_true_prob_pct,
+        )
+        desc_lines = [
+            f"**{ls.match_title}**",
+            table,
+        ]
+        if ls.is_fallback:
+            desc_lines.append(f"💰 **Mise : {ls.stake_eur:.2f} €** *(Option de secours)*")
+        else:
+            desc_lines.append(f"💰 **Mise : {ls.stake_eur:.2f} €**")
+        if ls.pitch_dynamic:
+            desc_lines.append(f"🏟️ *{ls.pitch_dynamic}*")
+
+        embeds.append({
+            "title": f"COTE OSÉE {status_tag}",
+            "description": "\n".join(desc_lines),
+            "color": card_color,
+        })
+
+    # -----------------------------------------------------------------
+    # Embed 5 : Autres opportunités (EV > 0)
+    # -----------------------------------------------------------------
+    valid_secondary = [
+        r for r in report.secondary_recommendations
+        if not r.is_fallback and r.ev_pct > 0
+    ]
+    if valid_secondary:
+        table = _format_secondary_table(valid_secondary[:7])
+        embeds.append({
+            "title": "AUTRES OPPORTUNITÉS (EV > 0)",
+            "description": f"{table}\n*Sélections secondaires calculées avec espérance mathématique positive.*",
+            "color": DISCORD_COLOR_GREEN,
+        })
+
+    # Footer sur la dernière carte
+    if embeds:
+        embeds[-1]["footer"] = {
+            "text": "Winamax Value Betting Agent • Staking Kelly Fractionnaire • Jouer comporte des risques"
+        }
+        embeds[-1]["timestamp"] = datetime.utcnow().isoformat() + "Z"
 
     payload = {
         "username": "Winamax Value Agent",
         "avatar_url": "https://upload.wikimedia.org/wikipedia/fr/thumb/f/f8/Logo_Winamax.svg/1200px-Logo_Winamax.svg.png",
-        "embeds": [embed],
+        "embeds": embeds,
     }
 
     return payload
@@ -279,4 +355,3 @@ def send_discord_report(
     except Exception as e:
         logger.warning(f"Impossible d'envoyer la notification Discord: {e}")
         return False
-
