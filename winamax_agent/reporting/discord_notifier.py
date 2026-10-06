@@ -1,6 +1,7 @@
 """Discord Webhook notification module for broadcasting daily betting decision reports."""
 
 from __future__ import annotations
+import os
 import json
 import logging
 import urllib.error
@@ -14,6 +15,24 @@ logger = logging.getLogger(__name__)
 DISCORD_COLOR_GREEN = 0x2ECC71   # 3066993 - Sélection validée (EV > 0)
 DISCORD_COLOR_YELLOW = 0xF1C40F  # 15844351 - Option de secours / défensive
 DISCORD_COLOR_GRAY = 0x95A5A6    # 9807270 - Aucun pari jouable / inactif
+
+
+def generate_github_issue_url(
+    match: str,
+    selection: str,
+    stake: float,
+    odds: float,
+    repo_owner: str = "bastienpoissonnet-png",
+    repo_name: str = "winamax_agent",
+) -> str:
+    """Generates a pre-filled GitHub issue creation link for bet tracking."""
+    env_repo = os.getenv("GITHUB_REPOSITORY", "").strip()
+    if env_repo and "/" in env_repo:
+        repo_owner, repo_name = env_repo.split("/", 1)
+
+    title_part = f"[PARI]+{match}+{selection}".replace(" ", "+")
+    body_part = f"Mise:+{stake:.2f}€+|+Cote:+{odds:.2f}".replace(" ", "+")
+    return f"https://github.com/{repo_owner}/{repo_name}/issues/new?title={title_part}&body={body_part}"
 
 
 def format_compact_selection(label: str) -> str:
@@ -110,11 +129,24 @@ def format_discord_embed(report: DailyReport) -> Dict[str, Any]:
     header_color = DISCORD_COLOR_YELLOW if has_fallback else (
         DISCORD_COLOR_GREEN if (report.top_recommendation or report.match_of_the_day) else DISCORD_COLOR_GRAY
     )
+    bankroll_val = report.current_bankroll
+    profit_val = report.total_profit
+    if bankroll_val is None or profit_val is None:
+        try:
+            from winamax_agent.bankroll import load_or_init_bankroll
+            b_data = load_or_init_bankroll()
+            bankroll_val = float(b_data.get("current_bankroll", 50.0))
+            profit_val = float(b_data.get("total_profit", 0.0))
+        except Exception:
+            bankroll_val = 50.0
+            profit_val = 0.0
+
     embed_header = {
         "title": f"🎯 Winamax Value Agent — Rapport du {date_display}",
         "description": (
             f"📊 **Marchés scannés :** {report.total_markets_analyzed} sur {report.total_matches_analyzed} rencontres\n"
             f"✨ **Opportunités EV > 0 :** {report.positive_ev_count}\n"
+            f"💼 **Solde :** {bankroll_val:.2f} € ({profit_val:+.2f} €)\n"
             f"📌 **Statut global :** {'🟡 *Attention : Présence d’options de secours*' if has_fallback else '🟢 *Toutes les opportunités sont validées (EV > 0)*'}"
         ),
         "color": header_color,
@@ -140,6 +172,12 @@ def format_discord_embed(report: DailyReport) -> Dict[str, Any]:
             ev_pct=m.ev_pct,
             prob_pct=m.model_true_prob_pct,
         )
+        issue_link = generate_github_issue_url(
+            match=m.match_title,
+            selection=m.selection_label,
+            stake=m.stake_eur,
+            odds=m.winamax_odds,
+        )
         desc_lines = [
             f"**{m.match_title}**",
             table,
@@ -148,6 +186,7 @@ def format_discord_embed(report: DailyReport) -> Dict[str, Any]:
             desc_lines.append(f"💰 **Mise : {m.stake_eur:.2f} €** *(Option de secours)*")
         else:
             desc_lines.append(f"💰 **Mise : {m.stake_eur:.2f} €**")
+        desc_lines.append(f"🔗 [Enregistrer ce pari sur GitHub]({issue_link})")
         if m.pitch_dynamic:
             desc_lines.append(f"🏟️ *{m.pitch_dynamic}*")
 
@@ -176,6 +215,12 @@ def format_discord_embed(report: DailyReport) -> Dict[str, Any]:
             ev_pct=rec.ev_pct,
             prob_pct=rec.model_true_prob_pct,
         )
+        issue_link = generate_github_issue_url(
+            match=rec.match_title,
+            selection=rec.selection_label,
+            stake=rec.stake_eur,
+            odds=rec.winamax_odds,
+        )
         desc_lines = [
             f"**{rec.match_title}**",
             table,
@@ -184,6 +229,7 @@ def format_discord_embed(report: DailyReport) -> Dict[str, Any]:
             desc_lines.append(f"💰 **Mise : {rec.stake_eur:.2f} €** *(Option de secours)*")
         else:
             desc_lines.append(f"💰 **Mise : {rec.stake_eur:.2f} €**")
+        desc_lines.append(f"🔗 [Enregistrer ce pari sur GitHub]({issue_link})")
         if rec.pitch_dynamic:
             desc_lines.append(f"🏟️ *{rec.pitch_dynamic}*")
 

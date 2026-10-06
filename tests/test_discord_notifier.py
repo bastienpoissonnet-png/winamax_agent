@@ -95,6 +95,7 @@ class TestDiscordNotifier(unittest.TestCase):
         self.assertIn("2026-10-06", header["title"])
         self.assertIn("Marchés scannés :", header["description"])
         self.assertIn("Opportunités EV > 0 :", header["description"])
+        self.assertIn("Solde :", header["description"])
 
         # Embed 1: Match du Jour
         motd = payload["embeds"][1]
@@ -108,6 +109,8 @@ class TestDiscordNotifier(unittest.TestCase):
         self.assertIn("Moins de 3.5 buts", motd["description"])
         self.assertIn("1.55", motd["description"])
         self.assertIn("💰 **Mise : 10.00 €**", motd["description"])
+        self.assertIn("issues/new?title=[PARI]", motd["description"])
+        self.assertIn("Enregistrer ce pari sur GitHub", motd["description"])
         self.assertIn("🏟️ *Nice concède très peu d'occasions", motd["description"])
 
         # Embed 2: Meilleur Pari Simple
@@ -116,6 +119,8 @@ class TestDiscordNotifier(unittest.TestCase):
         self.assertEqual(single["title"], "PARI SIMPLE [VALIDÉ]")
         self.assertIn("Paris Saint Germain vs Nice", single["description"])
         self.assertIn("💰 **Mise : 10.00 €**", single["description"])
+        self.assertIn("issues/new?title=[PARI]", single["description"])
+        self.assertIn("Enregistrer ce pari sur GitHub", single["description"])
 
         # Embed 3: Combiné
         parlay = payload["embeds"][3]

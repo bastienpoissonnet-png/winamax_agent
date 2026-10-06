@@ -59,6 +59,9 @@ class DailyReport:
     secondary_parlays: List[ParlayOpportunity] = field(default_factory=list)
     # Section 4 : La « Cote Osée » (Cote >= 4.00, Micro-Kelly)
     longshot_recommendation: Optional[BetRecommendation] = None
+    # Bankroll tracking
+    current_bankroll: Optional[float] = None
+    total_profit: Optional[float] = None
 
     def render_console(self) -> str:
         """Formats the report for direct terminal display across 4 distinct sections."""

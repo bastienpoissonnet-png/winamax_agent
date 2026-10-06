@@ -47,6 +47,28 @@ class WinamaxBettingAgent:
                 preferred_bookmaker=self.config.bookmaker,
             )
 
+        # Lecture prioritaire de la bankroll active depuis reports/bankroll.json
+        from pathlib import Path
+        bankroll_path = Path("reports/bankroll.json")
+        if hasattr(self.config, "bankroll_file") and self.config.bankroll_file:
+            bankroll_path = Path(self.config.bankroll_file)
+        elif hasattr(self.config, "output_dir") and (self.config.output_dir / "bankroll.json").exists():
+            bankroll_path = self.config.output_dir / "bankroll.json"
+
+        try:
+            from winamax_agent.bankroll import load_or_init_bankroll
+            b_data = load_or_init_bankroll(filepath=bankroll_path, default_initial=self.config.total_bankroll)
+            self.config.total_bankroll = float(b_data.get("current_bankroll", self.config.total_bankroll))
+            self.bankroll_data = b_data
+        except Exception as e:
+            logger.warning(f"Impossible de charger bankroll.json: {e}")
+            self.bankroll_data = {
+                "initial_bankroll": self.config.total_bankroll,
+                "current_bankroll": self.config.total_bankroll,
+                "total_profit": 0.0,
+                "history": [],
+            }
+
     def notify_discord(self, report: DailyReport) -> bool:
         """Sends daily report to Discord webhook if configured."""
         from winamax_agent.reporting.discord_notifier import send_discord_report
@@ -923,4 +945,6 @@ class WinamaxBettingAgent:
             top_parlay=top_parlay,
             secondary_parlays=secondary_parlays,
             longshot_recommendation=longshot_rec,
+            current_bankroll=self.config.total_bankroll,
+            total_profit=float(self.bankroll_data.get("total_profit", 0.0)) if hasattr(self, "bankroll_data") else 0.0,
         )

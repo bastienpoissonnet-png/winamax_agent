@@ -61,7 +61,8 @@ class AgentConfig:
         ]
     )
     markets: List[str] = field(default_factory=lambda: ["h2h", "totals"])
-    total_bankroll: float = 500.0
+    total_bankroll: float = 50.0
+    bankroll_file: Path = field(default_factory=lambda: Path("reports/bankroll.json"))
     kelly_fraction: float = 0.50  # 50% Fractional Kelly (Half-Kelly)
     min_stake: float = 1.0        # Plancher strict de 1 €
     max_stake: float = 20.0       # Plafond absolu strict de 20 €
@@ -125,6 +126,15 @@ class AgentConfig:
         if not api_key or api_key == "votre_cle_api_ici":
             simulation_mode = True
 
+        bankroll_file = Path(os.getenv("BANKROLL_FILE", "reports/bankroll.json"))
+        default_env_bankroll = float(os.getenv("TOTAL_BANKROLL", "50.0"))
+        try:
+            from winamax_agent.bankroll import load_or_init_bankroll
+            b_data = load_or_init_bankroll(filepath=bankroll_file, default_initial=default_env_bankroll)
+            active_bankroll = float(b_data.get("current_bankroll", default_env_bankroll))
+        except Exception:
+            active_bankroll = default_env_bankroll
+
         return cls(
             odds_api_key=api_key,
             football_data_api_key=os.getenv("FOOTBALL_DATA_API_KEY", "").strip(),
@@ -132,7 +142,8 @@ class AgentConfig:
             bookmaker=os.getenv("BOOKMAKER", "winamax").strip().lower(),
             competitions=competitions,
             markets=markets,
-            total_bankroll=float(os.getenv("TOTAL_BANKROLL", "500.0")),
+            total_bankroll=active_bankroll,
+            bankroll_file=bankroll_file,
             kelly_fraction=float(os.getenv("KELLY_FRACTION", "0.50")),
             min_stake=float(os.getenv("MIN_STAKE", "1.0")),
             max_stake=float(os.getenv("MAX_STAKE", "20.0")),

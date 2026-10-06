@@ -82,6 +82,38 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Active les logs détaillés en mode DEBUG",
     )
+    # Bankroll tracking arguments
+    parser.add_argument(
+        "--record-bet",
+        type=str,
+        default=None,
+        help="Enregistre un pari dans le suivi de bankroll (ex: 'Atlético Madrid')",
+    )
+    parser.add_argument(
+        "--stake",
+        type=float,
+        default=None,
+        help="Montant de la mise du pari en euros (€)",
+    )
+    parser.add_argument(
+        "--odds",
+        type=float,
+        default=None,
+        help="Cote Winamax du pari",
+    )
+    parser.add_argument(
+        "--status",
+        type=str,
+        choices=["pending", "win", "loss"],
+        default="pending",
+        help="Résultat du pari : 'pending', 'win', ou 'loss'",
+    )
+    parser.add_argument(
+        "--bankroll-file",
+        type=str,
+        default="reports/bankroll.json",
+        help="Chemin vers le fichier de suivi bankroll.json",
+    )
 
     return parser.parse_args()
 
@@ -97,6 +129,41 @@ def main() -> None:
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         datefmt="%H:%M:%S",
     )
+
+    # Interception de la commande d'enregistrement de pari
+    if args.record_bet:
+        if args.stake is None:
+            print("❌ Erreur : L'argument --stake est obligatoire pour enregistrer un pari.")
+            sys.exit(1)
+        if args.odds is None:
+            print("❌ Erreur : L'argument --odds est obligatoire pour enregistrer un pari.")
+            sys.exit(1)
+
+        from winamax_agent.bankroll import record_bet
+        try:
+            b_data = record_bet(
+                selection=args.record_bet,
+                stake=args.stake,
+                odds=args.odds,
+                status=args.status,
+                filepath=args.bankroll_file,
+            )
+            status_emojis = {"win": "🟢 [GAGNÉ]", "loss": "🔴 [PERDU]", "pending": "⏳ [EN COURS]"}
+            badge = status_emojis.get(args.status.lower(), f"[{args.status.upper()}]")
+            net_prof = b_data["history"][-1]["net_profit"] if b_data.get("history") else 0.0
+            print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            print(" 💼 SUIVI DE LA CAGNOTTE (BANKROLL TRACKER) — PARI ENREGISTRÉ")
+            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            print(f" • Sélection      : {args.record_bet}")
+            print(f" • Mise & Cote    : {args.stake:.2f} € @ {args.odds:.2f}")
+            print(f" • Statut         : {badge}")
+            print(f" • Résultat net   : {net_prof:+.2f} €")
+            print(f" • Solde actuel   : {b_data['current_bankroll']:.2f} € (Profit global: {b_data['total_profit']:+.2f} €)")
+            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+            return
+        except Exception as e:
+            print(f"❌ Erreur lors de l'enregistrement du pari : {e}")
+            sys.exit(1)
 
     # Load base configuration
     config = AgentConfig.from_env(env_path=args.env_file)
