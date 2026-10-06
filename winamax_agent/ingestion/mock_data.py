@@ -265,4 +265,35 @@ def get_mock_fixtures() -> List[MatchFixture]:
                 ),
             },
         ),
+        # Ligue 2 : Paris FC vs Rodez (Vérification de distinction stricte Paris FC vs PSG)
+        MatchFixture(
+            id="mock_l2_pfc_rod",
+            sport_key="soccer_france_ligue_two",
+            competition_name="Ligue 2 BKT",
+            commence_time="2026-10-10T19:00:00Z",
+            home_team="Paris FC",
+            away_team="Rodez",
+            winamax_odds={
+                "h2h": MarketOdds(
+                    bookmaker="winamax",
+                    market_key="h2h",
+                    outcomes={"home": 1.95, "draw": 3.40, "away": 3.90},
+                ),
+                "double_chance": MarketOdds(
+                    bookmaker="winamax",
+                    market_key="double_chance",
+                    outcomes={"1x": 1.25, "x2": 1.80, "12": 1.30},
+                ),
+                "totals": MarketOdds(
+                    bookmaker="winamax",
+                    market_key="totals",
+                    outcomes={
+                        "over_1.5": 1.32,
+                        "under_1.5": 3.25,
+                        "over_2.5": 1.95,
+                        "under_2.5": 1.85,
+                    },
+                ),
+            },
+        ),
     ]

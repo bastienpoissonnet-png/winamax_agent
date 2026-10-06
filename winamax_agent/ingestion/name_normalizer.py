@@ -7,11 +7,15 @@ from typing import Dict, Optional
 
 # Canonical mapping for top European teams across different data feeds
 CANONICAL_CLUBS: Dict[str, str] = {
-    # Ligue 1
+    # Ligue 1 & Ligue 2 - Paris
     "paris saint germain": "Paris Saint-Germain",
     "paris saint-germain": "Paris Saint-Germain",
     "psg": "Paris Saint-Germain",
     "paris sg": "Paris Saint-Germain",
+    "paris fc": "Paris FC",
+    "paris football club": "Paris FC",
+    "pfc": "Paris FC",
+    "paris f c": "Paris FC",
     "marseille": "Olympique de Marseille",
     "olympique marseille": "Olympique de Marseille",
     "om": "Olympique de Marseille",
@@ -173,6 +177,14 @@ def clean_team_name(name: str) -> str:
     stripped = "".join(c for c in normalized if not unicodedata.combining(c))
     s = stripped.lower().strip()
 
+    # Special handling for Paris FC / PFC to prevent losing 'fc' or collapsing into 'paris'
+    clean_punct = re.sub(r"[^\w\s]", " ", s)
+    tokens = clean_punct.split()
+    if tokens in (["paris", "fc"], ["pfc"], ["paris", "football", "club"], ["paris", "f", "c"]):
+        return "paris fc"
+    if "paris" in tokens and "fc" in tokens and not ({"saint", "germain", "sg", "st"} & set(tokens)):
+        return "paris fc"
+
     # Remove standard noise tokens and club suffixes/prefixes
     tokens_to_remove = [
         r"\bfc\b", r"\bafc\b", r"\bcf\b", r"\bsc\b", r"\brc\b", r"\bogc\b",
@@ -190,9 +202,37 @@ def clean_team_name(name: str) -> str:
 
 def canonicalize_team_name(raw_name: str) -> str:
     """Resolves any raw club name (from The Odds API, Football-Data, or Understat)
-
-    to its single canonical name.
+    to its single canonical name with strict prioritization.
     """
+    if not raw_name:
+        return ""
+
+    raw_lower = raw_name.lower().strip()
+
+    # Priorité absolue 1 : Distinction stricte Paris FC vs Paris Saint-Germain
+    pfc_patterns = [
+        r"\bparis\s*fc\b",
+        r"\bpfc\b",
+        r"\bparis\s+football\s+club\b",
+        r"\bparis\s+f\.c\.?\b",
+    ]
+    psg_patterns = [
+        r"\bpsg\b",
+        r"\bparis\s*sg\b",
+        r"\bparis\s+saint\s+germain\b",
+        r"\bparis\s+saint-germain\b",
+        r"\bparis\s+st\s+germain\b",
+        r"\bparis\s+st-germain\b",
+    ]
+
+    is_pfc = any(re.search(pat, raw_lower) for pat in pfc_patterns)
+    is_psg = any(re.search(pat, raw_lower) for pat in psg_patterns)
+
+    if is_pfc and not is_psg:
+        return "Paris FC"
+    if is_psg and not is_pfc:
+        return "Paris Saint-Germain"
+
     cleaned = clean_team_name(raw_name)
 
     # 1. Exact match in canonical dict
@@ -201,6 +241,12 @@ def canonicalize_team_name(raw_name: str) -> str:
 
     # 2. Substring matching in canonical dict
     for key, canonical in CANONICAL_CLUBS.items():
+        # Prevent any cross-matching between Paris FC and Paris Saint-Germain
+        if canonical == "Paris Saint-Germain" and ("fc" in cleaned.split() or "pfc" in cleaned):
+            continue
+        if canonical == "Paris FC" and ("saint" in cleaned or "germain" in cleaned or "psg" in cleaned):
+            continue
+
         if key == cleaned or (len(key) >= 4 and (key in cleaned or cleaned in key)):
             return canonical
 

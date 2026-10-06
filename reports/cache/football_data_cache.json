@@ -1,5 +1,5 @@
 {
-  "timestamp": 1791278309.0388672,
+  "timestamp": 1791322071.57997,
   "teams": {
     "Paris Saint-Germain": {
       "team_name": "Paris Saint-Germain",
@@ -9,7 +9,25 @@
       "goals_against_l5": 4,
       "streak_l5": "V-V-N-V-V",
       "form_rating": 0.867,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 4,
+      "draws_l5": 1,
+      "losses_l5": 0,
+      "shots_on_target_l5": 9.6
+    },
+    "Paris FC": {
+      "team_name": "Paris FC",
+      "matches_played": 5,
+      "points_l5": 8,
+      "goals_for_l5": 6,
+      "goals_against_l5": 5,
+      "streak_l5": "V-N-D-V-N",
+      "form_rating": 0.533,
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 2,
+      "draws_l5": 2,
+      "losses_l5": 1,
+      "shots_on_target_l5": 4.6
     },
     "Olympique de Marseille": {
       "team_name": "Olympique de Marseille",
@@ -19,7 +37,11 @@
       "goals_against_l5": 6,
       "streak_l5": "V-D-V-N-V",
       "form_rating": 0.667,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 3,
+      "draws_l5": 1,
+      "losses_l5": 1,
+      "shots_on_target_l5": 7.5
     },
     "AS Monaco": {
       "team_name": "AS Monaco",
@@ -29,7 +51,11 @@
       "goals_against_l5": 5,
       "streak_l5": "V-V-N-N-V",
       "form_rating": 0.733,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 3,
+      "draws_l5": 2,
+      "losses_l5": 0,
+      "shots_on_target_l5": 7.2
     },
     "LOSC Lille": {
       "team_name": "LOSC Lille",
@@ -39,7 +65,11 @@
       "goals_against_l5": 4,
       "streak_l5": "N-V-N-V-D",
       "form_rating": 0.6,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 2,
+      "draws_l5": 2,
+      "losses_l5": 1,
+      "shots_on_target_l5": 5.3
     },
     "Olympique Lyonnais": {
       "team_name": "Olympique Lyonnais",
@@ -49,7 +79,11 @@
       "goals_against_l5": 8,
       "streak_l5": "V-D-N-V-D",
       "form_rating": 0.533,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 2,
+      "draws_l5": 1,
+      "losses_l5": 2,
+      "shots_on_target_l5": 6.1
     },
     "RC Lens": {
       "team_name": "RC Lens",
@@ -59,7 +93,11 @@
       "goals_against_l5": 4,
       "streak_l5": "N-N-V-N-D",
       "form_rating": 0.533,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 1,
+      "draws_l5": 3,
+      "losses_l5": 1,
+      "shots_on_target_l5": 4.6
     },
     "OGC Nice": {
       "team_name": "OGC Nice",
@@ -69,7 +107,11 @@
       "goals_against_l5": 5,
       "streak_l5": "D-V-N-N-D",
       "form_rating": 0.467,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 1,
+      "draws_l5": 2,
+      "losses_l5": 2,
+      "shots_on_target_l5": 4.4
     },
     "Stade Rennais": {
       "team_name": "Stade Rennais",
@@ -79,7 +121,11 @@
       "goals_against_l5": 8,
       "streak_l5": "D-N-D-V-D",
       "form_rating": 0.4,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 1,
+      "draws_l5": 1,
+      "losses_l5": 3,
+      "shots_on_target_l5": 4.7
     },
     "Stade Brestois 29": {
       "team_name": "Stade Brestois 29",
@@ -89,7 +135,11 @@
       "goals_against_l5": 7,
       "streak_l5": "V-D-N-D-N",
       "form_rating": 0.467,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 1,
+      "draws_l5": 2,
+      "losses_l5": 2,
+      "shots_on_target_l5": 4.4
     },
     "RC Strasbourg": {
       "team_name": "RC Strasbourg",
@@ -99,7 +149,11 @@
       "goals_against_l5": 9,
       "streak_l5": "D-D-N-V-D",
       "form_rating": 0.333,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 1,
+      "draws_l5": 1,
+      "losses_l5": 3,
+      "shots_on_target_l5": 4.0
     },
     "Arsenal": {
       "team_name": "Arsenal",
@@ -109,7 +163,11 @@
       "goals_against_l5": 3,
       "streak_l5": "V-V-N-V-V",
       "form_rating": 0.867,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 4,
+      "draws_l5": 1,
+      "losses_l5": 0,
+      "shots_on_target_l5": 8.6
     },
     "Liverpool": {
       "team_name": "Liverpool",
@@ -119,7 +177,11 @@
       "goals_against_l5": 4,
       "streak_l5": "V-V-V-D-V",
       "form_rating": 0.867,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 4,
+      "draws_l5": 0,
+      "losses_l5": 1,
+      "shots_on_target_l5": 8.1
     },
     "Manchester City": {
       "team_name": "Manchester City",
@@ -129,7 +191,11 @@
       "goals_against_l5": 5,
       "streak_l5": "V-N-V-N-V",
       "form_rating": 0.8,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 3,
+      "draws_l5": 2,
+      "losses_l5": 0,
+      "shots_on_target_l5": 8.9
     },
     "Chelsea": {
       "team_name": "Chelsea",
@@ -139,7 +205,11 @@
       "goals_against_l5": 7,
       "streak_l5": "V-V-N-D-V",
       "form_rating": 0.667,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 3,
+      "draws_l5": 1,
+      "losses_l5": 1,
+      "shots_on_target_l5": 7.0
     },
     "Aston Villa": {
       "team_name": "Aston Villa",
@@ -149,7 +219,11 @@
       "goals_against_l5": 6,
       "streak_l5": "N-V-D-V-N",
       "form_rating": 0.6,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 2,
+      "draws_l5": 2,
+      "losses_l5": 1,
+      "shots_on_target_l5": 5.8
     },
     "Tottenham Hotspur": {
       "team_name": "Tottenham Hotspur",
@@ -159,7 +233,11 @@
       "goals_against_l5": 8,
       "streak_l5": "D-V-D-V-N",
       "form_rating": 0.533,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 2,
+      "draws_l5": 1,
+      "losses_l5": 2,
+      "shots_on_target_l5": 6.6
     },
     "Newcastle United": {
       "team_name": "Newcastle United",
@@ -169,7 +247,11 @@
       "goals_against_l5": 7,
       "streak_l5": "D-N-V-D-N",
       "form_rating": 0.467,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 1,
+      "draws_l5": 2,
+      "losses_l5": 2,
+      "shots_on_target_l5": 4.9
     },
     "Brighton & Hove Albion": {
       "team_name": "Brighton & Hove Albion",
@@ -179,7 +261,11 @@
       "goals_against_l5": 8,
       "streak_l5": "N-D-V-N-N",
       "form_rating": 0.533,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 1,
+      "draws_l5": 3,
+      "losses_l5": 1,
+      "shots_on_target_l5": 5.6
     },
     "Manchester United": {
       "team_name": "Manchester United",
@@ -189,7 +275,11 @@
       "goals_against_l5": 7,
       "streak_l5": "D-N-D-V-N",
       "form_rating": 0.467,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 1,
+      "draws_l5": 2,
+      "losses_l5": 2,
+      "shots_on_target_l5": 4.4
     },
     "Real Madrid": {
       "team_name": "Real Madrid",
@@ -199,7 +289,11 @@
       "goals_against_l5": 4,
       "streak_l5": "V-V-N-V-N",
       "form_rating": 0.8,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 3,
+      "draws_l5": 2,
+      "losses_l5": 0,
+      "shots_on_target_l5": 7.9
     },
     "FC Barcelone": {
       "team_name": "FC Barcelone",
@@ -209,7 +303,11 @@
       "goals_against_l5": 5,
       "streak_l5": "V-V-D-V-V",
       "form_rating": 0.8,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 4,
+      "draws_l5": 0,
+      "losses_l5": 1,
+      "shots_on_target_l5": 9.4
     },
     "Bayern Munich": {
       "team_name": "Bayern Munich",
@@ -219,7 +317,11 @@
       "goals_against_l5": 4,
       "streak_l5": "V-V-V-N-V",
       "form_rating": 0.867,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 4,
+      "draws_l5": 1,
+      "losses_l5": 0,
+      "shots_on_target_l5": 10.6
     },
     "Inter Milan": {
       "team_name": "Inter Milan",
@@ -229,7 +331,11 @@
       "goals_against_l5": 3,
       "streak_l5": "V-N-V-V-D",
       "form_rating": 0.733,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 3,
+      "draws_l5": 1,
+      "losses_l5": 1,
+      "shots_on_target_l5": 6.7
     },
     "Bayer Leverkusen": {
       "team_name": "Bayer Leverkusen",
@@ -239,7 +345,11 @@
       "goals_against_l5": 6,
       "streak_l5": "V-N-N-V-D",
       "form_rating": 0.667,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 2,
+      "draws_l5": 2,
+      "losses_l5": 1,
+      "shots_on_target_l5": 7.5
     },
     "Borussia Dortmund": {
       "team_name": "Borussia Dortmund",
@@ -249,7 +359,11 @@
       "goals_against_l5": 7,
       "streak_l5": "D-V-N-V-D",
       "form_rating": 0.6,
-      "last_match_date": "2026-10-04T20:00:00Z"
+      "last_match_date": "2026-10-04T20:00:00Z",
+      "wins_l5": 2,
+      "draws_l5": 1,
+      "losses_l5": 2,
+      "shots_on_target_l5": 6.3
     }
   }
 }

@@ -194,6 +194,17 @@ class FotmobClient:
             "xg_against_per_match": 0.82,
             "is_national_team": False,
         },
+        "Paris FC": {
+            "league": "Ligue 2",
+            "matches_played": 26,
+            "recent_form_points": 8.0,
+            "streak_l5": "V-N-D-V-N",
+            "goals_for_l5": 6,
+            "goals_against_l5": 5,
+            "xg_for_per_match": 1.28,
+            "xg_against_per_match": 1.15,
+            "is_national_team": False,
+        },
         "Olympique de Marseille": {
             "league": "Ligue 1",
             "matches_played": 24,
@@ -272,6 +283,23 @@ class FotmobClient:
                     data = raw.get("teams", {})
                     for k, v in data.items():
                         self._memory_cache[k] = FotmobTeamMetrics(**v)
+                    # Ensure any new seed items are present
+                    for team_name, s_data in self.DEFAULT_SEED_METRICS.items():
+                        c_name = canonicalize_team_name(team_name)
+                        if c_name not in self._memory_cache:
+                            self._memory_cache[c_name] = FotmobTeamMetrics(
+                                team_name=c_name,
+                                league=s_data["league"],
+                                matches_played=s_data["matches_played"],
+                                recent_form_points=s_data["recent_form_points"],
+                                streak_l5=s_data["streak_l5"],
+                                goals_for_l5=s_data["goals_for_l5"],
+                                goals_against_l5=s_data["goals_against_l5"],
+                                xg_for_per_match=s_data["xg_for_per_match"],
+                                xg_against_per_match=s_data["xg_against_per_match"],
+                                source="fotmob_seed_calibrated",
+                                is_national_team=s_data.get("is_national_team", False),
+                            )
                     logger.info(f"Loaded {len(self._memory_cache)} teams from FotMob disk cache.")
                     return
             except Exception as e:
@@ -416,6 +444,10 @@ class FotmobClient:
 
         # Fuzzy match in memory cache
         for name, metrics in self._memory_cache.items():
+            # Strict separation between Paris FC and Paris Saint-Germain
+            if ("paris fc" in canonical.lower() and "saint" in name.lower()) or \
+               ("paris fc" in name.lower() and "saint" in canonical.lower()):
+                continue
             if name.lower() in canonical.lower() or canonical.lower() in name.lower():
                 return metrics
 

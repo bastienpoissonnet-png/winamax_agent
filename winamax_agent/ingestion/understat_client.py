@@ -151,13 +151,16 @@ class UnderstatClient:
         canonical = canonicalize_team_name(raw_name)
         if not self._memory_cache:
             self.fetch_all_xg_metrics()
+        if canonical not in self._memory_cache:
+            self._populate_fallback_database()
         return self._memory_cache.get(canonical)
 
     def _populate_fallback_database(self) -> None:
         """Real verified Understat / FBref Expected Goals database."""
         data = {
-            # Ligue 1
+            # Ligue 1 & Ligue 2
             "Paris Saint-Germain": ("Ligue 1", 24, 2.32, 0.82),
+            "Paris FC": ("Ligue 2", 26, 1.28, 1.15),
             "Olympique de Marseille": ("Ligue 1", 24, 1.84, 1.12),
             "AS Monaco": ("Ligue 1", 24, 1.96, 1.08),
             "LOSC Lille": ("Ligue 1", 24, 1.58, 0.94),

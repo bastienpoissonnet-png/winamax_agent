@@ -1,5 +1,5 @@
 {
-  "timestamp": 1791281268.8566647,
+  "timestamp": 1791322069.8914952,
   "teams": {
     "France": {
       "team_name": "France",
@@ -12,7 +12,11 @@
       "xg_for_per_match": 2.15,
       "xg_against_per_match": 0.85,
       "source": "fotmob_seed_calibrated",
-      "is_national_team": true
+      "is_national_team": true,
+      "wins_l5": 3,
+      "draws_l5": 1,
+      "losses_l5": 1,
+      "shots_on_target_l5": 6.7
     },
     "Italie": {
       "team_name": "Italie",
@@ -25,7 +29,11 @@
       "xg_for_per_match": 1.55,
       "xg_against_per_match": 1.2,
       "source": "fotmob_seed_calibrated",
-      "is_national_team": true
+      "is_national_team": true,
+      "wins_l5": 2,
+      "draws_l5": 2,
+      "losses_l5": 1,
+      "shots_on_target_l5": 5.3
     },
     "Espagne": {
       "team_name": "Espagne",
@@ -38,7 +46,11 @@
       "xg_for_per_match": 2.25,
       "xg_against_per_match": 0.7,
       "source": "fotmob_seed_calibrated",
-      "is_national_team": true
+      "is_national_team": true,
+      "wins_l5": 4,
+      "draws_l5": 1,
+      "losses_l5": 0,
+      "shots_on_target_l5": 8.1
     },
     "Danemark": {
       "team_name": "Danemark",
@@ -51,7 +63,11 @@
       "xg_for_per_match": 1.35,
       "xg_against_per_match": 1.15,
       "source": "fotmob_seed_calibrated",
-      "is_national_team": true
+      "is_national_team": true,
+      "wins_l5": 2,
+      "draws_l5": 1,
+      "losses_l5": 2,
+      "shots_on_target_l5": 4.6
     },
     "Belgique": {
       "team_name": "Belgique",
@@ -64,7 +80,11 @@
       "xg_for_per_match": 1.9,
       "xg_against_per_match": 0.95,
       "source": "fotmob_seed_calibrated",
-      "is_national_team": true
+      "is_national_team": true,
+      "wins_l5": 3,
+      "draws_l5": 1,
+      "losses_l5": 1,
+      "shots_on_target_l5": 6.0
     },
     "Israël": {
       "team_name": "Israël",
@@ -77,7 +97,11 @@
       "xg_for_per_match": 0.95,
       "xg_against_per_match": 1.85,
       "source": "fotmob_seed_calibrated",
-      "is_national_team": true
+      "is_national_team": true,
+      "wins_l5": 0,
+      "draws_l5": 1,
+      "losses_l5": 4,
+      "shots_on_target_l5": 2.6
     },
     "Allemagne": {
       "team_name": "Allemagne",
@@ -90,7 +114,11 @@
       "xg_for_per_match": 2.1,
       "xg_against_per_match": 1.05,
       "source": "fotmob_seed_calibrated",
-      "is_national_team": true
+      "is_national_team": true,
+      "wins_l5": 3,
+      "draws_l5": 1,
+      "losses_l5": 1,
+      "shots_on_target_l5": 7.2
     },
     "Pays-Bas": {
       "team_name": "Pays-Bas",
@@ -103,7 +131,11 @@
       "xg_for_per_match": 1.85,
       "xg_against_per_match": 1.25,
       "source": "fotmob_seed_calibrated",
-      "is_national_team": true
+      "is_national_team": true,
+      "wins_l5": 2,
+      "draws_l5": 2,
+      "losses_l5": 1,
+      "shots_on_target_l5": 5.8
     },
     "Portugal": {
       "team_name": "Portugal",
@@ -116,7 +148,11 @@
       "xg_for_per_match": 2.05,
       "xg_against_per_match": 0.8,
       "source": "fotmob_seed_calibrated",
-      "is_national_team": true
+      "is_national_team": true,
+      "wins_l5": 3,
+      "draws_l5": 1,
+      "losses_l5": 1,
+      "shots_on_target_l5": 7.4
     },
     "Croatie": {
       "team_name": "Croatie",
@@ -129,7 +165,11 @@
       "xg_for_per_match": 1.4,
       "xg_against_per_match": 1.1,
       "source": "fotmob_seed_calibrated",
-      "is_national_team": true
+      "is_national_team": true,
+      "wins_l5": 2,
+      "draws_l5": 1,
+      "losses_l5": 2,
+      "shots_on_target_l5": 4.6
     },
     "Paris Saint-Germain": {
       "team_name": "Paris Saint-Germain",
@@ -142,7 +182,28 @@
       "xg_for_per_match": 2.32,
       "xg_against_per_match": 0.82,
       "source": "fotmob_seed_calibrated",
-      "is_national_team": false
+      "is_national_team": false,
+      "wins_l5": 4,
+      "draws_l5": 1,
+      "losses_l5": 0,
+      "shots_on_target_l5": 9.6
+    },
+    "Paris FC": {
+      "team_name": "Paris FC",
+      "league": "Ligue 2",
+      "matches_played": 26,
+      "recent_form_points": 8.0,
+      "streak_l5": "V-N-D-V-N",
+      "goals_for_l5": 6,
+      "goals_against_l5": 5,
+      "xg_for_per_match": 1.28,
+      "xg_against_per_match": 1.15,
+      "source": "fotmob_seed_calibrated",
+      "is_national_team": false,
+      "wins_l5": 2,
+      "draws_l5": 2,
+      "losses_l5": 1,
+      "shots_on_target_l5": 4.6
     },
     "Olympique de Marseille": {
       "team_name": "Olympique de Marseille",
@@ -155,7 +216,11 @@
       "xg_for_per_match": 1.84,
       "xg_against_per_match": 1.12,
       "source": "fotmob_seed_calibrated",
-      "is_national_team": false
+      "is_national_team": false,
+      "wins_l5": 3,
+      "draws_l5": 1,
+      "losses_l5": 1,
+      "shots_on_target_l5": 7.5
     },
     "Olympique Lyonnais": {
       "team_name": "Olympique Lyonnais",
@@ -168,7 +233,11 @@
       "xg_for_per_match": 1.62,
       "xg_against_per_match": 1.34,
       "source": "fotmob_seed_calibrated",
-      "is_national_team": false
+      "is_national_team": false,
+      "wins_l5": 2,
+      "draws_l5": 1,
+      "losses_l5": 2,
+      "shots_on_target_l5": 6.1
     },
     "OGC Nice": {
       "team_name": "OGC Nice",
@@ -181,7 +250,11 @@
       "xg_for_per_match": 1.36,
       "xg_against_per_match": 0.9,
       "source": "fotmob_seed_calibrated",
-      "is_national_team": false
+      "is_national_team": false,
+      "wins_l5": 1,
+      "draws_l5": 2,
+      "losses_l5": 2,
+      "shots_on_target_l5": 4.4
     },
     "Arsenal": {
       "team_name": "Arsenal",
@@ -194,7 +267,11 @@
       "xg_for_per_match": 2.08,
       "xg_against_per_match": 0.72,
       "source": "fotmob_seed_calibrated",
-      "is_national_team": false
+      "is_national_team": false,
+      "wins_l5": 4,
+      "draws_l5": 1,
+      "losses_l5": 0,
+      "shots_on_target_l5": 8.6
     },
     "Chelsea": {
       "team_name": "Chelsea",
@@ -207,7 +284,11 @@
       "xg_for_per_match": 1.92,
       "xg_against_per_match": 1.25,
       "source": "fotmob_seed_calibrated",
-      "is_national_team": false
+      "is_national_team": false,
+      "wins_l5": 3,
+      "draws_l5": 1,
+      "losses_l5": 1,
+      "shots_on_target_l5": 7.0
     }
   }
 }
