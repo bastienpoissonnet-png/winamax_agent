@@ -54,9 +54,9 @@ class WinamaxBettingAgent:
 
     def _is_solid_winner_pick(self, rec: BetRecommendation) -> bool:
         """Impose une probabilité de réalisation solide pour les sélections majeures (Section 1 et 2):
-        - Victoire sèche (1X2) : P_modèle >= 55%
-        - Double chance (1X, X2) : P_modèle >= 65%
-        - Autres marchés (Totaux) : P_modèle >= 60%
+        - Victoire sèche (1X2, sweet spot 1.50 - 3.00) : P_modèle >= 48%
+        - Double chance (1X, X2) : P_modèle >= 60%
+        - Autres marchés (Totaux) : P_modèle >= 55%
         """
         label = rec.selection_label
         p_pct = rec.model_true_prob_pct
@@ -65,13 +65,13 @@ class WinamaxBettingAgent:
         is_dc = any(k in label for k in ["(1X)", "(X2)", "(12)", "ou Nul"])
 
         if is_straight:
-            if p_pct < 55.0:
+            if p_pct < 48.0:
                 return False
         elif is_dc:
-            if p_pct < 65.0:
+            if p_pct < 60.0:
                 return False
         else:
-            if p_pct < 60.0:
+            if p_pct < 55.0:
                 return False
 
         return True
@@ -479,9 +479,9 @@ class WinamaxBettingAgent:
                 if today_opps:
                     def today_fallback_score(o: ValueOpportunity) -> float:
                         prob_p = o.model_true_prob
-                        if o.selection_key in ("home", "away") and prob_p < 0.55:
+                        if o.selection_key in ("home", "away") and prob_p < 0.48:
                             prob_p *= 0.5
-                        elif o.selection_key in ("1x", "x2") and prob_p < 0.65:
+                        elif o.selection_key in ("1x", "x2") and prob_p < 0.60:
                             prob_p *= 0.7
                         solid_bonus = 1.30 if o.is_solid_market else 1.0
                         return (prob_p * 2.0 + (1.0 + o.ev)) * solid_bonus
@@ -550,6 +550,79 @@ class WinamaxBettingAgent:
             and self._is_solid_winner_pick(r)
         ]
         top_rec = sweet_spot_solid[0] if sweet_spot_solid else None
+
+        # Priorité aux sélections validées EV > 0 :
+        # Si une opportunité du Sweet Spot a une EV > 0 et passe le filtre anti-surprise,
+        # elle DOIT obligatoirement devenir le Pari Simple [VALIDÉ] avant d'envisager le mode [SECOURS].
+        if not top_rec:
+            sweet_spot_valid = [
+                r for r in recommendations
+                if self.config.min_odds <= r.winamax_odds <= self.config.max_odds
+                and not r.is_fallback
+                and r.ev_pct > 0
+            ]
+            if sweet_spot_valid:
+                top_rec = sweet_spot_valid[0]
+            else:
+                # Vérifier parmi toutes les opportunités calculées (all_opps)
+                sweet_spot_ev_pos = [
+                    o for o in all_opps
+                    if self.config.min_odds <= o.odds <= self.config.max_odds
+                    and o.ev > self.config.min_ev_threshold
+                    and not (o.selection_key in ("home", "away") and o.rejection_reason and "Cohérence sportive" in o.rejection_reason)
+                ]
+                if sweet_spot_ev_pos:
+                    sweet_spot_ev_pos.sort(key=score_ranking, reverse=True)
+                    best_ev_opp = sweet_spot_ev_pos[0]
+                    matching_fix = next(
+                        (f for f in fixtures if f.home_team == best_ev_opp.home_team and f.away_team == best_ev_opp.away_team),
+                        None,
+                    )
+                    kickoff = matching_fix.commence_time if matching_fix else "N/A"
+                    home_metrics = self.stats_provider.get_team_metrics(best_ev_opp.home_team, is_home=True)
+                    away_metrics = self.stats_provider.get_team_metrics(best_ev_opp.away_team, is_home=False)
+                    context = self.stats_provider.generate_context_justification(
+                        home_team=best_ev_opp.home_team,
+                        away_team=best_ev_opp.away_team,
+                        home_metrics=home_metrics,
+                        away_metrics=away_metrics,
+                        market_key=best_ev_opp.market_type,
+                        selection_key=best_ev_opp.selection_key,
+                    )
+                    kelly_res = calculate_kelly_stake(
+                        true_prob=best_ev_opp.model_true_prob,
+                        odds=best_ev_opp.odds,
+                        bankroll=self.config.total_bankroll,
+                        kelly_multiplier=self.config.kelly_fraction,
+                        min_odds=self.config.min_odds,
+                        max_odds=self.config.max_odds,
+                        min_prob_threshold=self.config.min_prob_threshold,
+                        min_prob_low_odds=self.config.min_prob_low_odds,
+                    )
+                    stake = kelly_res.final_stake_eur if (not kelly_res.is_rejected and kelly_res.final_stake_eur > 0) else self.config.min_stake
+                    top_rec = BetRecommendation(
+                        competition=best_ev_opp.competition,
+                        match_title=best_ev_opp.match_title,
+                        kickoff=kickoff,
+                        market_name=best_ev_opp.market_type,
+                        selection_label=best_ev_opp.selection,
+                        bookmaker="Winamax",
+                        winamax_odds=best_ev_opp.odds,
+                        raw_implied_prob_pct=best_ev_opp.raw_implied_prob * 100.0,
+                        fair_bookmaker_prob_pct=best_ev_opp.fair_bookmaker_prob * 100.0,
+                        model_true_prob_pct=best_ev_opp.model_true_prob * 100.0,
+                        edge_pct=best_ev_opp.edge_pct,
+                        ev_pct=best_ev_opp.ev_pct,
+                        stake_eur=stake,
+                        stake_details=kelly_res.reason if not kelly_res.is_rejected else f"Mise calibrée ({stake:.2f} €) pour sélection Sweet Spot à EV positive.",
+                        point_1_xg=context.xg_justification,
+                        point_2_h2h_tactics=context.h2h_tactical_justification,
+                        point_3_context_form=context.team_context_justification,
+                        pitch_dynamic=context.pitch_dynamic,
+                        is_fallback=False,
+                        status_badge="🟢 OPPORTUNITÉ VALIDÉE (EV > 0)",
+                        warning_message="",
+                    )
 
         # Collecter les autres opportunités distinctes validées (EV > 0)
         primary_match_keys = set()

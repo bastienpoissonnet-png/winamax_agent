@@ -205,9 +205,9 @@ class TestAgentIntegration(unittest.TestCase):
                 is_straight = any(k in motd.selection_label for k in ["(1)", "(2)"]) or ("Victoire" in motd.selection_label and "Nul" not in motd.selection_label)
                 is_dc = any(k in motd.selection_label for k in ["(1X)", "(X2)", "(12)", "ou Nul"])
                 if is_straight:
-                    self.assertGreaterEqual(motd.model_true_prob_pct, 55.0)
+                    self.assertGreaterEqual(motd.model_true_prob_pct, 48.0)
                 elif is_dc:
-                    self.assertGreaterEqual(motd.model_true_prob_pct, 65.0)
+                    self.assertGreaterEqual(motd.model_true_prob_pct, 60.0)
 
         # 2. Section 2 : Top Recommendation (solid winner probability)
         if report.top_recommendation:
@@ -217,9 +217,9 @@ class TestAgentIntegration(unittest.TestCase):
                 is_straight = any(k in top.selection_label for k in ["(1)", "(2)"]) or ("Victoire" in top.selection_label and "Nul" not in top.selection_label)
                 is_dc = any(k in top.selection_label for k in ["(1X)", "(X2)", "(12)", "ou Nul"])
                 if is_straight:
-                    self.assertGreaterEqual(top.model_true_prob_pct, 55.0)
+                    self.assertGreaterEqual(top.model_true_prob_pct, 48.0)
                 elif is_dc:
-                    self.assertGreaterEqual(top.model_true_prob_pct, 65.0)
+                    self.assertGreaterEqual(top.model_true_prob_pct, 60.0)
 
         # 3. Console & Markdown reporting include pitch dynamic
         console_out = report.render_console()
@@ -229,6 +229,104 @@ class TestAgentIntegration(unittest.TestCase):
         export_to_markdown(report, md_path)
         md_text = md_path.read_text(encoding="utf-8")
         self.assertIn("Dynamique concrète de terrain", md_text)
+
+    def test_softened_thresholds_and_pari_simple_priority(self):
+        """Tests that 48% (straight win) and 60% (double chance) are accepted, and EV > 0 sweet spot picks prevent fallback."""
+        from winamax_agent.reporting.reporter import BetRecommendation
+
+        # 1. Test _is_solid_winner_pick with 50-52% on 2.10 (straight win)
+        rec_straight_51 = BetRecommendation(
+            competition="La Liga",
+            match_title="Atletico Madrid vs Sevilla",
+            kickoff="2026-10-10T21:00:00Z",
+            market_name="1X2 (Résultat)",
+            selection_label="Victoire Atletico Madrid (1)",
+            bookmaker="Winamax",
+            winamax_odds=2.10,
+            raw_implied_prob_pct=47.6,
+            fair_bookmaker_prob_pct=45.0,
+            model_true_prob_pct=51.0,
+            edge_pct=6.0,
+            ev_pct=7.1,
+            stake_eur=10.0,
+            stake_details="Kelly sizing",
+            point_1_xg="",
+            point_2_h2h_tactics="",
+            point_3_context_form="",
+        )
+        self.assertTrue(self.agent._is_solid_winner_pick(rec_straight_51))
+
+        # Straight win below 48% is rejected as solid
+        rec_straight_46 = BetRecommendation(
+            competition="La Liga",
+            match_title="Valencia vs Betis",
+            kickoff="2026-10-10T21:00:00Z",
+            market_name="1X2 (Résultat)",
+            selection_label="Victoire Valencia (1)",
+            bookmaker="Winamax",
+            winamax_odds=2.30,
+            raw_implied_prob_pct=43.5,
+            fair_bookmaker_prob_pct=41.0,
+            model_true_prob_pct=46.0,
+            edge_pct=5.0,
+            ev_pct=5.8,
+            stake_eur=5.0,
+            stake_details="Kelly sizing",
+            point_1_xg="",
+            point_2_h2h_tactics="",
+            point_3_context_form="",
+        )
+        self.assertFalse(self.agent._is_solid_winner_pick(rec_straight_46))
+
+        # 2. Test Double Chance with 61% (accepted >= 60%) vs 58% (rejected < 60%)
+        rec_dc_61 = BetRecommendation(
+            competition="Premier League",
+            match_title="Liverpool vs Man City",
+            kickoff="2026-10-11T17:30:00Z",
+            market_name="Double Chance (Sécurisation)",
+            selection_label="Liverpool ou Nul (1X)",
+            bookmaker="Winamax",
+            winamax_odds=1.72,
+            raw_implied_prob_pct=58.1,
+            fair_bookmaker_prob_pct=55.0,
+            model_true_prob_pct=61.0,
+            edge_pct=6.0,
+            ev_pct=4.9,
+            stake_eur=10.0,
+            stake_details="Kelly sizing",
+            point_1_xg="",
+            point_2_h2h_tactics="",
+            point_3_context_form="",
+        )
+        self.assertTrue(self.agent._is_solid_winner_pick(rec_dc_61))
+
+        rec_dc_58 = BetRecommendation(
+            competition="Premier League",
+            match_title="Liverpool vs Man City",
+            kickoff="2026-10-11T17:30:00Z",
+            market_name="Double Chance (Sécurisation)",
+            selection_label="Liverpool ou Nul (1X)",
+            bookmaker="Winamax",
+            winamax_odds=1.80,
+            raw_implied_prob_pct=55.5,
+            fair_bookmaker_prob_pct=52.0,
+            model_true_prob_pct=58.0,
+            edge_pct=6.0,
+            ev_pct=4.4,
+            stake_eur=10.0,
+            stake_details="Kelly sizing",
+            point_1_xg="",
+            point_2_h2h_tactics="",
+            point_3_context_form="",
+        )
+        self.assertFalse(self.agent._is_solid_winner_pick(rec_dc_58))
+
+        # 3. Test that run_daily_analysis chooses a validated top_recommendation (is_fallback == False)
+        report = self.agent.run_daily_analysis()
+        self.assertIsNotNone(report.top_recommendation)
+        self.assertFalse(report.top_recommendation.is_fallback)
+        self.assertIn("OPPORTUNITÉ VALIDÉE", report.top_recommendation.status_badge)
+        self.assertGreater(report.top_recommendation.ev_pct, 0.0)
 
 
 if __name__ == "__main__":
