@@ -35,25 +35,24 @@ def format_discord_embed(report: DailyReport) -> Dict[str, Any]:
     # -----------------------------------------------------------------
     if not report.match_of_the_day:
         fields.append({
-            "name": "📅 1. LE MATCH DU JOUR [ℹ️ AUCUN MATCH]",
-            "value": "Aucune rencontre programmée aujourd'hui dans le calendrier des compétitions suivies.\n💰 **Mise conseillée : 0.00 €** *(Préservation du capital)*",
+            "name": "MATCH DU JOUR [AUCUN PARI JOUABLE]",
+            "value": "Aucun pari jouable aujourd'hui (cotes < 1.05 ou calendrier vide)\n• Mise : 0.00 €",
             "inline": False,
         })
     else:
         m = report.match_of_the_day
-        badge_symbol = "🟡 [SECOURS]" if m.is_fallback else "🟢 [VALIDÉ]"
+        status_tag = "[SECOURS]" if m.is_fallback else "[VALIDÉ]"
         lines = [
-            f"**Match :** {m.match_title} *({m.competition})*",
-            f"**Marché :** {m.market_name}",
-            f"**Sélection :** **{m.selection_label}**",
-            f"**Cote :** `{m.winamax_odds:.2f}` | **EV :** `{m.ev_pct:+.2f}%` | **Modèle :** `{m.model_true_prob_pct:.1f}%`",
-            f"💰 **Mise conseillée :** **{m.stake_eur:.2f} €**",
+            f"{m.match_title}",
+            f"• Pari : {m.selection_label} @ {m.winamax_odds:.2f}",
         ]
         if m.is_fallback:
-            lines.append(f"⚠️ *Choix de secours sous-optimal (EV: {m.ev_pct:+.2f}%) : mise symbolique minimale.*")
+            lines.append(f"• Mise : {m.stake_eur:.2f} € (Option de secours)")
+        else:
+            lines.append(f"• Mise : {m.stake_eur:.2f} € | EV : {m.ev_pct:+.1f}%")
         fields.append({
-            "name": f"📅 1. LE MATCH DU JOUR {badge_symbol}",
-            "value": "\n".join(lines)[:1020],
+            "name": f"MATCH DU JOUR {status_tag}",
+            "value": "\n".join(lines),
             "inline": False,
         })
 
@@ -62,25 +61,24 @@ def format_discord_embed(report: DailyReport) -> Dict[str, Any]:
     # -----------------------------------------------------------------
     if not report.top_recommendation:
         fields.append({
-            "name": "🎯 2. LE MEILLEUR PARI SIMPLE [ℹ️ AUCUN PARI]",
-            "value": "Aucun pari simple identifié sur le marché cette semaine.\n💰 **Mise conseillée : 0.00 €** *(Préservation du capital)*",
+            "name": "PARI SIMPLE [AUCUN PARI JOUABLE]",
+            "value": "Aucun pari simple éligible cette semaine\n• Mise : 0.00 €",
             "inline": False,
         })
     else:
         rec = report.top_recommendation
-        badge_symbol = "🟡 [SECOURS]" if rec.is_fallback else "🟢 [VALIDÉ]"
+        status_tag = "[SECOURS]" if rec.is_fallback else "[VALIDÉ]"
         lines = [
-            f"**Match :** {rec.match_title} *({rec.competition})*",
-            f"**Marché :** {rec.market_name}",
-            f"**Sélection :** **{rec.selection_label}**",
-            f"**Cote :** `{rec.winamax_odds:.2f}` (Sweet Spot) | **EV :** `{rec.ev_pct:+.2f}%` | **Modèle :** `{rec.model_true_prob_pct:.1f}%`",
-            f"💰 **Mise conseillée :** **{rec.stake_eur:.2f} €**",
+            f"{rec.match_title}",
+            f"• Pari : {rec.selection_label} @ {rec.winamax_odds:.2f}",
         ]
         if rec.is_fallback:
-            lines.append(f"⚠️ *Choix de secours sous-optimal (EV: {rec.ev_pct:+.2f}%) : mise symbolique minimale.*")
+            lines.append(f"• Mise : {rec.stake_eur:.2f} € (Option de secours)")
+        else:
+            lines.append(f"• Mise : {rec.stake_eur:.2f} € | EV : {rec.ev_pct:+.1f}%")
         fields.append({
-            "name": f"🎯 2. LE MEILLEUR PARI SIMPLE {badge_symbol}",
-            "value": "\n".join(lines)[:1020],
+            "name": f"PARI SIMPLE {status_tag}",
+            "value": "\n".join(lines),
             "inline": False,
         })
 
@@ -89,29 +87,25 @@ def format_discord_embed(report: DailyReport) -> Dict[str, Any]:
     # -----------------------------------------------------------------
     if not report.top_parlay:
         fields.append({
-            "name": "🔗 3. LE MEILLEUR COMBINÉ [ℹ️ AUCUN COMBINÉ]",
-            "value": "Nombre insuffisant de rencontres distinctes pour constituer un combiné.\n💰 **Mise combiné conseillée : 0.00 €**",
+            "name": "COMBINÉ [AUCUN COMBINÉ]",
+            "value": "Nombre insuffisant de sélections pour un combiné\n• Mise : 0.00 €",
             "inline": False,
         })
     else:
         p = report.top_parlay
-        badge_symbol = "🟡 [SECOURS]" if p.is_fallback else "🟢 [VALIDÉ]"
-        legs_desc = []
-        for i, leg in enumerate(p.legs, 1):
-            short_match = leg.match_title.split(" vs ")[0] if " vs " in leg.match_title else leg.match_title
-            legs_desc.append(f"• **{short_match}** : {leg.selection} @ `{leg.odds:.2f}` *(P: {leg.prob_pct:.0f}%)*")
-
+        status_tag = "[SECOURS]" if p.is_fallback else "[VALIDÉ]"
         lines = [
-            f"**Structure :** Combiné de **{p.legs_count} sélections indépendantes**",
-            f"**Cote Combinée Totale :** `{p.total_odds:.2f}` | **EV :** `{p.combined_ev_pct:+.2f}%` | **Prob. :** `{p.combined_prob_pct:.1f}%`",
-            f"💰 **Mise combiné conseillée :** **{p.recommended_stake:.2f} €**",
-            "**Détail des jambes :**\n" + "\n".join(legs_desc),
+            f"Cote totale : {p.total_odds:.2f} | Prob : {p.combined_prob_pct:.1f}%",
         ]
+        for leg in p.legs:
+            lines.append(f"• {leg.selection} @ {leg.odds:.2f}")
         if p.is_fallback:
-            lines.append(f"⚠️ *Combiné de secours (EV: {p.combined_ev_pct:+.2f}%) : mise symbolique minimale.*")
+            lines.append(f"• Mise : {p.recommended_stake:.2f} €")
+        else:
+            lines.append(f"• Mise : {p.recommended_stake:.2f} € | EV : {p.combined_ev_pct:+.1f}%")
         fields.append({
-            "name": f"🔗 3. LE MEILLEUR COMBINÉ {badge_symbol}",
-            "value": "\n".join(lines)[:1020],
+            "name": f"COMBINÉ {status_tag}",
+            "value": "\n".join(lines),
             "inline": False,
         })
 
@@ -120,25 +114,24 @@ def format_discord_embed(report: DailyReport) -> Dict[str, Any]:
     # -----------------------------------------------------------------
     if not report.longshot_recommendation:
         fields.append({
-            "name": "💣 4. LA COTE OSÉE [ℹ️ AUCUNE COTE]",
-            "value": "Aucune cote osée (>= 4.00) disponible sur les marchés analysés.\n💰 **Mise Fun Bet : 0.00 €**",
+            "name": "COTE OSÉE [AUCUNE COTE]",
+            "value": "Aucune cote comprise entre 4.00 et 10.00 disponible\n• Mise : 0.00 €",
             "inline": False,
         })
     else:
         ls = report.longshot_recommendation
-        badge_symbol = "🟡 [SECOURS]" if ls.is_fallback else "🟢 [VALIDÉ]"
+        status_tag = "[SECOURS]" if ls.is_fallback else "[VALIDÉ]"
         lines = [
-            f"**Match :** {ls.match_title} *({ls.competition})*",
-            f"**Marché :** {ls.market_name}",
-            f"**Sélection osée :** **{ls.selection_label}**",
-            f"**Cote :** `{ls.winamax_odds:.2f}` (Haute cote) | **EV :** `{ls.ev_pct:+.2f}%` | **Modèle :** `{ls.model_true_prob_pct:.1f}%`",
-            f"💰 **Mise Fun Bet conseillée :** **{ls.stake_eur:.2f} €** *(Micro-Kelly)*",
+            f"{ls.match_title}",
+            f"• Pari : {ls.selection_label} @ {ls.winamax_odds:.2f}",
         ]
         if ls.is_fallback:
-            lines.append(f"⚠️ *Fun Bet sous l'équilibre (EV: {ls.ev_pct:+.2f}%) : mise de précaution 1.00 €.*")
+            lines.append(f"• Mise : {ls.stake_eur:.2f} € (Option de secours)")
+        else:
+            lines.append(f"• Mise : {ls.stake_eur:.2f} € | EV : {ls.ev_pct:+.1f}%")
         fields.append({
-            "name": f"💣 4. LA COTE OSÉE {badge_symbol}",
-            "value": "\n".join(lines)[:1020],
+            "name": f"COTE OSÉE {status_tag}",
+            "value": "\n".join(lines),
             "inline": False,
         })
 

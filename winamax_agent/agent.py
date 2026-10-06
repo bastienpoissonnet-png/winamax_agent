@@ -112,6 +112,9 @@ class WinamaxBettingAgent:
                 }
 
                 for outcome_key in ["home", "draw", "away"]:
+                    o_val = h2h_odds[outcome_key]
+                    if o_val < self.config.absolute_min_odds:
+                        continue
                     opp = evaluate_bet(
                         competition=fixture.competition_name,
                         home_team=fixture.home_team,
@@ -119,7 +122,7 @@ class WinamaxBettingAgent:
                         market_type="1X2 (Résultat)",
                         selection=labels_1x2[outcome_key],
                         selection_key=outcome_key,
-                        winamax_odds=h2h_odds[outcome_key],
+                        winamax_odds=o_val,
                         fair_bookmaker_prob=fair_probs[outcome_key],
                         model_true_prob=calibrated_probs[outcome_key],
                         min_ev_threshold=self.config.min_ev_threshold,
@@ -152,41 +155,43 @@ class WinamaxBettingAgent:
                 true_prob_1x = calibrated_probs.get("1x", fair_prob_1x)
                 true_prob_x2 = calibrated_probs.get("x2", fair_prob_x2)
 
-                opp_1x = evaluate_bet(
-                    competition=fixture.competition_name,
-                    home_team=fixture.home_team,
-                    away_team=fixture.away_team,
-                    market_type="Double Chance (Sécurisation)",
-                    selection=f"{fixture.home_team} ou Nul (1X)",
-                    selection_key="1x",
-                    winamax_odds=odds_1x,
-                    fair_bookmaker_prob=fair_prob_1x,
-                    model_true_prob=true_prob_1x,
-                    min_ev_threshold=self.config.min_ev_threshold,
-                    min_odds=self.config.min_odds,
-                    max_odds=self.config.max_odds,
-                    min_prob_threshold=self.config.min_prob_threshold,
-                    min_prob_low_odds=self.config.min_prob_low_odds,
-                )
-                opportunities.append(opp_1x)
+                if odds_1x >= self.config.absolute_min_odds:
+                    opp_1x = evaluate_bet(
+                        competition=fixture.competition_name,
+                        home_team=fixture.home_team,
+                        away_team=fixture.away_team,
+                        market_type="Double Chance (Sécurisation)",
+                        selection=f"{fixture.home_team} ou Nul (1X)",
+                        selection_key="1x",
+                        winamax_odds=odds_1x,
+                        fair_bookmaker_prob=fair_prob_1x,
+                        model_true_prob=true_prob_1x,
+                        min_ev_threshold=self.config.min_ev_threshold,
+                        min_odds=self.config.min_odds,
+                        max_odds=self.config.max_odds,
+                        min_prob_threshold=self.config.min_prob_threshold,
+                        min_prob_low_odds=self.config.min_prob_low_odds,
+                    )
+                    opportunities.append(opp_1x)
 
-                opp_x2 = evaluate_bet(
-                    competition=fixture.competition_name,
-                    home_team=fixture.home_team,
-                    away_team=fixture.away_team,
-                    market_type="Double Chance (Sécurisation)",
-                    selection=f"Nul ou {fixture.away_team} (X2)",
-                    selection_key="x2",
-                    winamax_odds=odds_x2,
-                    fair_bookmaker_prob=fair_prob_x2,
-                    model_true_prob=true_prob_x2,
-                    min_ev_threshold=self.config.min_ev_threshold,
-                    min_odds=self.config.min_odds,
-                    max_odds=self.config.max_odds,
-                    min_prob_threshold=self.config.min_prob_threshold,
-                    min_prob_low_odds=self.config.min_prob_low_odds,
-                )
-                opportunities.append(opp_x2)
+                if odds_x2 >= self.config.absolute_min_odds:
+                    opp_x2 = evaluate_bet(
+                        competition=fixture.competition_name,
+                        home_team=fixture.home_team,
+                        away_team=fixture.away_team,
+                        market_type="Double Chance (Sécurisation)",
+                        selection=f"Nul ou {fixture.away_team} (X2)",
+                        selection_key="x2",
+                        winamax_odds=odds_x2,
+                        fair_bookmaker_prob=fair_prob_x2,
+                        model_true_prob=true_prob_x2,
+                        min_ev_threshold=self.config.min_ev_threshold,
+                        min_odds=self.config.min_odds,
+                        max_odds=self.config.max_odds,
+                        min_prob_threshold=self.config.min_prob_threshold,
+                        min_prob_low_odds=self.config.min_prob_low_odds,
+                    )
+                    opportunities.append(opp_x2)
 
         # 3. Marchés Totaux de Buts analysés par lignes binaires complémentaires (1.5, 2.5, 3.5)
         if "totals" in fixture.winamax_odds:
@@ -207,6 +212,9 @@ class WinamaxBettingAgent:
                     fair_pair = margin_res.fair_probs_multiplicative
 
                     for sel_k, sel_txt in [(over_k, over_txt), (under_k, under_txt)]:
+                        o_val = pair_odds[sel_k]
+                        if o_val < self.config.absolute_min_odds:
+                            continue
                         p_fair = fair_pair[sel_k]
                         p_raw_model = raw_model_probs.get(sel_k, p_fair)
 
@@ -225,7 +233,7 @@ class WinamaxBettingAgent:
                             market_type=market_name,
                             selection=f"{sel_txt} ({sel_k.replace('_', ' ').title()})",
                             selection_key=sel_k,
-                            winamax_odds=pair_odds[sel_k],
+                            winamax_odds=o_val,
                             fair_bookmaker_prob=p_fair,
                             model_true_prob=p_calibrated,
                             min_ev_threshold=self.config.min_ev_threshold,
@@ -349,7 +357,10 @@ class WinamaxBettingAgent:
             except Exception:
                 return False
 
-        today_recs = [r for r in recommendations if is_match_today(r.kickoff)]
+        today_recs = [
+            r for r in recommendations
+            if is_match_today(r.kickoff) and r.winamax_odds >= self.config.absolute_min_odds
+        ]
         match_of_the_day = today_recs[0] if today_recs else None
 
         # Mode de secours Section 1 : si aucune EV > 0 aujourd'hui
@@ -358,6 +369,8 @@ class WinamaxBettingAgent:
             if today_fixtures:
                 today_opps: List[ValueOpportunity] = []
                 for opp in all_opps:
+                    if opp.odds < self.config.absolute_min_odds:
+                        continue
                     matching_fix = next(
                         (f for f in today_fixtures if f.home_team == opp.home_team and f.away_team == opp.away_team),
                         None,
@@ -634,8 +647,11 @@ class WinamaxBettingAgent:
                 point_3_context_form=context.team_context_justification,
             )
         elif all_opps:
-            # Mode de secours Section 4 : cote >= 4.00 et <= 10.00 la plus proche de l'équilibre
-            high_odds_opps = [o for o in all_opps if 4.00 <= o.odds <= 10.00]
+            # Mode de secours Section 4 : cote comprise entre longshot_min_odds et longshot_max_odds (4.00 à 10.00)
+            high_odds_opps = [
+                o for o in all_opps
+                if self.config.longshot_min_odds <= o.odds <= self.config.longshot_max_odds
+            ]
             if high_odds_opps:
                 high_odds_opps.sort(key=lambda o: (o.ev, o.model_true_prob), reverse=True)
                 best_high_fb = high_odds_opps[0]
@@ -662,7 +678,7 @@ class WinamaxBettingAgent:
                 )
 
                 warning = (
-                    "⚠️ OPTION DE SECOURS — SOUS-OPTIMALE : Aucune cote osée (>= 4.00) ne présente d'EV positive. "
+                    f"⚠️ OPTION DE SECOURS — SOUS-OPTIMALE : Aucune cote osée (entre {self.config.longshot_min_odds:.2f} et {self.config.longshot_max_odds:.2f}) ne présente d'EV positive. "
                     f"Sélection de la cote haute la plus proche de l'équilibre mathématique ({best_high_fb.selection} @ {best_high_fb.odds:.2f}, EV: {best_high_fb.ev_pct:+.2f}%). "
                     f"Mise symbolique minimale ({fb_stake_res.final_stake_eur:.2f} €) pour tester la cote sans risquer son capital."
                 )

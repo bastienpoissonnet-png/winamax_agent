@@ -66,6 +66,8 @@ class AgentConfig:
     min_stake: float = 1.0        # Plancher strict de 1 €
     max_stake: float = 20.0       # Plafond absolu strict de 20 €
     min_ev_threshold: float = 0.005 # Seuil d'EV minimale (+0.5% d'edge)
+    # Plancher absolu de cote (interdiction des cotes dérisoires type 1.01)
+    absolute_min_odds: float = 1.05
     # Plage de cotes Sweet Spot (1.50 - 3.00)
     min_odds: float = 1.50        # Plancher de cote (rejeter < 1.50)
     max_odds: float = 3.00        # Plafond de cote (rejeter > 3.00)
@@ -78,9 +80,9 @@ class AgentConfig:
     parlay_max_odds: float = 4.00    # Cote combinée maximale
     parlay_max_stake: float = 15.0   # Plafond Kelly combiné (15.0 € max)
     parlay_kelly_fraction: float = 0.35 # Kelly fractionnaire pour combinés
-    # Paramètres de la « Cote Osée » (Fun Bet à forte cote)
+    # Paramètres de la « Cote Osée » (Fun Bet à forte cote entre 4.00 et 10.00)
     longshot_min_odds: float = 4.00   # Seuil de cote osée (>= 4.00)
-    longshot_max_odds: float = 15.00  # Plafond de cote pour éviter l'absurde
+    longshot_max_odds: float = 10.00  # Plafond strict de cote osée (<= 10.00 max)
     longshot_max_stake: float = 5.00  # Plafond strict pour fun bet (5.00 € max)
     longshot_min_stake: float = 1.00  # Plancher de 1.00 €
     longshot_kelly_fraction: float = 0.15 # Micro-Kelly (15%) pour absorber la variance
@@ -135,6 +137,7 @@ class AgentConfig:
             min_stake=float(os.getenv("MIN_STAKE", "1.0")),
             max_stake=float(os.getenv("MAX_STAKE", "20.0")),
             min_ev_threshold=float(os.getenv("MIN_EV_THRESHOLD", "0.005")),
+            absolute_min_odds=float(os.getenv("ABSOLUTE_MIN_ODDS", "1.05")),
             min_odds=float(os.getenv("MIN_ODDS", "1.50")),
             max_odds=float(os.getenv("MAX_ODDS", "3.00")),
             min_prob_threshold=float(os.getenv("MIN_PROB_THRESHOLD", "0.40")),
@@ -145,8 +148,8 @@ class AgentConfig:
             parlay_max_odds=float(os.getenv("PARLAY_MAX_ODDS", "4.00")),
             parlay_max_stake=float(os.getenv("PARLAY_MAX_STAKE", "15.0")),
             parlay_kelly_fraction=float(os.getenv("PARLAY_KELLY_FRACTION", "0.35")),
-            longshot_min_odds=float(os.getenv("LONGSHOT_MIN_ODDS", "4.00")),
-            longshot_max_odds=float(os.getenv("LONGSHOT_MAX_ODDS", "15.00")),
+            longshot_min_odds=float(os.getenv("MIN_DARING_ODDS", os.getenv("LONGSHOT_MIN_ODDS", "4.00"))),
+            longshot_max_odds=float(os.getenv("MAX_DARING_ODDS", os.getenv("LONGSHOT_MAX_ODDS", "10.00"))),
             longshot_max_stake=float(os.getenv("LONGSHOT_MAX_STAKE", "5.00")),
             longshot_min_stake=float(os.getenv("LONGSHOT_MIN_STAKE", "1.00")),
             longshot_kelly_fraction=float(os.getenv("LONGSHOT_KELLY_FRACTION", "0.15")),

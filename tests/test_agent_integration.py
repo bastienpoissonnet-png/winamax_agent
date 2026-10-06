@@ -159,6 +159,42 @@ class TestAgentIntegration(unittest.TestCase):
         self.assertIn("CHOIX DE SECOURS (SOUS-OPTIMAL / RECOMMANDATION PAR DÉFAUT)", fb_content)
         self.assertIn("OPTION DE SECOURS — SOUS-OPTIMALE", fb_content)
 
+    def test_strict_odds_bounds_enforcement(self):
+        """Tests that absolute floor (>= 1.05) and daring odds ceiling (<= 10.00) are enforced."""
+        # 1. Config defaults
+        self.assertEqual(self.config.absolute_min_odds, 1.05)
+        self.assertEqual(self.config.longshot_max_odds, 10.00)
+
+        # 2. Run analysis and verify no selection has odds < 1.05
+        report = self.agent.run_daily_analysis()
+        if report.match_of_the_day:
+            self.assertGreaterEqual(report.match_of_the_day.winamax_odds, 1.05)
+        if report.top_recommendation:
+            self.assertGreaterEqual(report.top_recommendation.winamax_odds, 1.05)
+        if report.longshot_recommendation:
+            self.assertGreaterEqual(report.longshot_recommendation.winamax_odds, 4.00)
+            self.assertLessEqual(report.longshot_recommendation.winamax_odds, 10.00)
+
+        # 3. If absolute_min_odds is set very high (e.g. 10.00), no match of the day is playable
+        high_floor_config = AgentConfig(
+            odds_api_key="",
+            simulation_mode=True,
+            absolute_min_odds=10.00,
+            output_dir=Path(self.temp_dir),
+        )
+        high_floor_agent = WinamaxBettingAgent(config=high_floor_config)
+        report_high_floor = high_floor_agent.run_daily_analysis()
+        self.assertIsNone(report_high_floor.match_of_the_day)
+
+    def test_env_parsing_of_odds_bounds(self):
+        """Tests that from_env parses ABSOLUTE_MIN_ODDS and MAX_DARING_ODDS."""
+        import os
+        from unittest.mock import patch
+        with patch.dict(os.environ, {"ABSOLUTE_MIN_ODDS": "1.08", "MAX_DARING_ODDS": "9.50"}):
+            cfg = AgentConfig.from_env()
+            self.assertEqual(cfg.absolute_min_odds, 1.08)
+            self.assertEqual(cfg.longshot_max_odds, 9.50)
+
 
 if __name__ == "__main__":
     unittest.main()

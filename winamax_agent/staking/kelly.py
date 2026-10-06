@@ -259,11 +259,11 @@ def calculate_micro_kelly_stake(
     bankroll: float = 500.0,
     kelly_multiplier: float = 0.15,       # Micro-Kelly (15%) pour amortir la variance élevée
     min_odds: float = 4.00,               # Seuil de cote osée (>= 4.00)
-    max_odds: float = 15.00,              # Plafond de cote
+    max_odds: float = 10.00,              # Plafond strict de cote osée (10.00 max)
     max_stake: float = 5.00,              # Plafond strict pour fun bet (5.00 € max)
     min_stake: float = 1.00,              # Plancher de 1.00 € si EV > 0
 ) -> KellyResult:
-    """Calculates ultra-conservative Micro-Kelly stake for high-odds fun bets (odds >= 4.00)."""
+    """Calculates ultra-conservative Micro-Kelly stake for high-odds fun bets (4.00 <= odds <= 10.00)."""
     if odds <= 1.0 or true_prob <= 0.0 or bankroll <= 0.0:
         return KellyResult(
             full_kelly_fraction=0.0,

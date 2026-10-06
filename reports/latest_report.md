@@ -1,8 +1,8 @@
 # 🎯 Rapport d'Aide à la Décision - Paris Sportifs (Winamax)
 
-*Généré le : 2026-10-06 14:51:15*
+*Généré le : 2026-10-06 15:58:46*
 
-**Marchés scannés :** 86 sur 8 rencontres | **Opportunités à valeur (EV > 0.5%) :** 10
+**Marchés scannés :** 85 sur 8 rencontres | **Opportunités à valeur (EV > 0.5%) :** 10
 
 ---
 ## 📅 Section 1 : Le Match du Jour (Uniquement aujourd'hui)

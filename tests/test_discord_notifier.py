@@ -90,17 +90,25 @@ class TestDiscordNotifier(unittest.TestCase):
         self.assertIn("2026-10-06", embed["title"])
         self.assertEqual(len(embed["fields"]), 4)
 
-        # Check fields content
+        # Check fields content - minimaliste et sobre
         motd_field = embed["fields"][0]
-        self.assertIn("1. LE MATCH DU JOUR", motd_field["name"])
-        self.assertIn("🟢 [VALIDÉ]", motd_field["name"])
+        self.assertEqual(motd_field["name"], "MATCH DU JOUR [VALIDÉ]")
         self.assertIn("Paris Saint Germain vs Nice", motd_field["value"])
-        self.assertIn("10.00 €", motd_field["value"])
+        self.assertIn("• Pari : Moins de 3.5 buts @ 1.55", motd_field["value"])
+        self.assertIn("• Mise : 10.00 € | EV : +0.9%", motd_field["value"])
+
+        single_field = embed["fields"][1]
+        self.assertEqual(single_field["name"], "PARI SIMPLE [VALIDÉ]")
 
         parlay_field = embed["fields"][2]
-        self.assertIn("3. LE MEILLEUR COMBINÉ", parlay_field["name"])
-        self.assertIn("1.86", parlay_field["value"])
-        self.assertIn("15.00 €", parlay_field["value"])
+        self.assertEqual(parlay_field["name"], "COMBINÉ [VALIDÉ]")
+        self.assertIn("Cote totale : 1.86 | Prob : 59.8%", parlay_field["value"])
+        self.assertIn("• Arsenal ou Nul (1X) @ 1.35", parlay_field["value"])
+        self.assertIn("• Marseille ou Nul (1X) @ 1.38", parlay_field["value"])
+        self.assertIn("• Mise : 15.00 € | EV : +11.2%", parlay_field["value"])
+
+        longshot_field = embed["fields"][3]
+        self.assertEqual(longshot_field["name"], "COTE OSÉE [VALIDÉ]")
 
     def test_format_discord_embed_with_fallback(self):
         # Create a report with a fallback selection
@@ -139,8 +147,28 @@ class TestDiscordNotifier(unittest.TestCase):
         payload = format_discord_embed(report_with_fb)
         embed = payload["embeds"][0]
         self.assertEqual(embed["color"], DISCORD_COLOR_YELLOW)
-        self.assertIn("🟡 [SECOURS]", embed["fields"][0]["name"])
-        self.assertIn("Choix de secours", embed["fields"][0]["value"])
+        self.assertEqual(embed["fields"][0]["name"], "MATCH DU JOUR [SECOURS]")
+        self.assertIn("• Mise : 1.00 € (Option de secours)", embed["fields"][0]["value"])
+        self.assertEqual(embed["fields"][2]["name"], "COMBINÉ [AUCUN COMBINÉ]")
+
+    def test_format_discord_embed_empty_match_today(self):
+        # When no match today or odds < 1.05
+        report_no_today = DailyReport(
+            timestamp="2026-10-06 12:00:00",
+            total_matches_analyzed=8,
+            total_markets_analyzed=86,
+            positive_ev_count=2,
+            match_of_the_day=None,
+            top_recommendation=self.sample_rec,
+            top_parlay=self.sample_parlay,
+            longshot_recommendation=self.sample_rec,
+        )
+        payload = format_discord_embed(report_no_today)
+        embed = payload["embeds"][0]
+        motd_field = embed["fields"][0]
+        self.assertEqual(motd_field["name"], "MATCH DU JOUR [AUCUN PARI JOUABLE]")
+        self.assertIn("cotes < 1.05 ou calendrier vide", motd_field["value"])
+        self.assertIn("• Mise : 0.00 €", motd_field["value"])
 
     def test_send_discord_report_empty_url(self):
         # Empty or placeholder URL returns False without making network request

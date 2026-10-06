@@ -127,14 +127,22 @@ class TestKellyStaking(unittest.TestCase):
         self.assertTrue(res_low.is_rejected)
         self.assertEqual(res_low.final_stake_eur, 0.0)
 
-        # Cote trop extrême (> 15.00) rejetée
+        # Cote trop extrême (> 10.00 max, ex: 10.50, 13.50, 21.00) rejetée
         res_extreme = calculate_micro_kelly_stake(
             true_prob=0.10,
-            odds=21.00,
+            odds=13.50,
             bankroll=500.0,
         )
         self.assertTrue(res_extreme.is_rejected)
         self.assertEqual(res_extreme.final_stake_eur, 0.0)
+
+        res_21 = calculate_micro_kelly_stake(
+            true_prob=0.10,
+            odds=21.00,
+            bankroll=500.0,
+        )
+        self.assertTrue(res_21.is_rejected)
+        self.assertEqual(res_21.final_stake_eur, 0.0)
 
     def test_fallback_staking(self):
         from winamax_agent.staking.kelly import calculate_fallback_stake
