@@ -29,6 +29,12 @@ class TeamMetrics:
     matches_played: int = 0       # Matchs réels joués
     league: str = ""              # Championnat
     data_source: str = "understat_live"
+    is_home: bool = True          # Contexte domicile (True) ou extérieur (False)
+    shots_on_target_l5: float = 0.0  # Tirs cadrés par match sur les 5 derniers matchs
+    wins_l5: int = 0              # Victoires réelles sur les 5 derniers matchs
+    draws_l5: int = 0             # Matchs nuls sur les 5 derniers matchs
+    losses_l5: int = 0            # Défaites réelles sur les 5 derniers matchs
+    home_away_context: str = ""   # Analyse textuelle du contexte domicile/extérieur
 
 
 @dataclass

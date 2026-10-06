@@ -247,6 +247,7 @@ class TestDiscordNotifier(unittest.TestCase):
         self.assertFalse(send_discord_report(self.sample_report, webhook_url=None))
         self.assertFalse(send_discord_report(self.sample_report, webhook_url="https://discord.com/api/webhooks/votre_webhook_ici"))
 
+    @patch.dict("sys.modules", {"requests": None})
     @patch("urllib.request.urlopen")
     def test_send_discord_report_success_urllib(self, mock_urlopen):
         mock_resp = MagicMock()
@@ -256,6 +257,16 @@ class TestDiscordNotifier(unittest.TestCase):
         res = send_discord_report(self.sample_report, webhook_url="https://discord.com/api/webhooks/123/abc")
         self.assertTrue(res)
         mock_urlopen.assert_called_once()
+
+    @patch("requests.post")
+    def test_send_discord_report_success_requests(self, mock_post):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 204
+        mock_post.return_value = mock_resp
+
+        res = send_discord_report(self.sample_report, webhook_url="https://discord.com/api/webhooks/123/abc")
+        self.assertTrue(res)
+        mock_post.assert_called_once()
 
 
 if __name__ == "__main__":

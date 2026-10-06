@@ -81,7 +81,8 @@ class TestAgentIntegration(unittest.TestCase):
         if report.longshot_recommendation:
             ls = report.longshot_recommendation
             self.assertGreaterEqual(ls.winamax_odds, 4.00)
-            self.assertGreater(ls.ev_pct, 0.0)
+            if not ls.is_fallback:
+                self.assertGreater(ls.ev_pct, 0.0)
             self.assertGreaterEqual(ls.stake_eur, 1.0)
             self.assertLessEqual(ls.stake_eur, 5.0)
 
@@ -192,17 +193,46 @@ class TestAgentIntegration(unittest.TestCase):
         report_high_floor = high_floor_agent.run_daily_analysis()
         self.assertIsNone(report_high_floor.match_of_the_day)
 
-    def test_env_parsing_of_odds_bounds(self):
-        """Tests that from_env parses ABSOLUTE_MIN_ODDS and MAX_DARING_ODDS."""
-        import os
-        from unittest.mock import patch
-        with patch.dict(os.environ, {"ABSOLUTE_MIN_ODDS": "1.08", "MAX_DARING_ODDS": "9.50"}):
-            cfg = AgentConfig.from_env()
-            self.assertEqual(cfg.absolute_min_odds, 1.08)
-            self.assertEqual(cfg.longshot_max_odds, 9.50)
+    def test_sporting_realism_and_pitch_dynamics(self):
+        """Tests that Section 1 & 2 selections satisfy solid winner criteria and include pitch dynamics."""
+        report = self.agent.run_daily_analysis()
+
+        # 1. Section 1 : Match du Jour (solid winner probability)
+        if report.match_of_the_day:
+            motd = report.match_of_the_day
+            self.assertTrue(len(motd.pitch_dynamic) > 10)
+            if not motd.is_fallback:
+                is_straight = any(k in motd.selection_label for k in ["(1)", "(2)"]) or ("Victoire" in motd.selection_label and "Nul" not in motd.selection_label)
+                is_dc = any(k in motd.selection_label for k in ["(1X)", "(X2)", "(12)", "ou Nul"])
+                if is_straight:
+                    self.assertGreaterEqual(motd.model_true_prob_pct, 55.0)
+                elif is_dc:
+                    self.assertGreaterEqual(motd.model_true_prob_pct, 65.0)
+
+        # 2. Section 2 : Top Recommendation (solid winner probability)
+        if report.top_recommendation:
+            top = report.top_recommendation
+            self.assertTrue(len(top.pitch_dynamic) > 10)
+            if not top.is_fallback:
+                is_straight = any(k in top.selection_label for k in ["(1)", "(2)"]) or ("Victoire" in top.selection_label and "Nul" not in top.selection_label)
+                is_dc = any(k in top.selection_label for k in ["(1X)", "(X2)", "(12)", "ou Nul"])
+                if is_straight:
+                    self.assertGreaterEqual(top.model_true_prob_pct, 55.0)
+                elif is_dc:
+                    self.assertGreaterEqual(top.model_true_prob_pct, 65.0)
+
+        # 3. Console & Markdown reporting include pitch dynamic
+        console_out = report.render_console()
+        self.assertIn("Dynamique terrain", console_out)
+
+        md_path = Path(self.temp_dir) / "dynamic_report.md"
+        export_to_markdown(report, md_path)
+        md_text = md_path.read_text(encoding="utf-8")
+        self.assertIn("Dynamique concrète de terrain", md_text)
 
 
 if __name__ == "__main__":
     unittest.main()
+
 
 

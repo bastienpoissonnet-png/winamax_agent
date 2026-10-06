@@ -27,6 +27,7 @@ class BetRecommendation:
     point_1_xg: str
     point_2_h2h_tactics: str
     point_3_context_form: str
+    pitch_dynamic: str = ""
     is_fallback: bool = False
     status_badge: str = "🟢 OPPORTUNITÉ VALIDÉE (EV > 0)"
     warning_message: str = ""
@@ -94,6 +95,8 @@ class DailyReport:
             lines.append(f"  • Marché       : {m.market_name}")
             lines.append(f"  • Sélection    : {m.selection_label}")
             lines.append(f"  • Cote Winamax : {m.winamax_odds:.2f}")
+            if m.pitch_dynamic:
+                lines.append(f"  • Dynamique terrain : {m.pitch_dynamic}")
             lines.append("")
             lines.append("📊 ANALYSE QUANTITATIVE :")
             lines.append(f"  • Probabilité fair Winamax (sans marge) : {m.fair_bookmaker_prob_pct:.1f}%")
@@ -130,6 +133,8 @@ class DailyReport:
             lines.append(f"  • Marché       : {rec.market_name}")
             lines.append(f"  • Sélection    : {rec.selection_label}")
             lines.append(f"  • Cote Winamax : {rec.winamax_odds:.2f}")
+            if rec.pitch_dynamic:
+                lines.append(f"  • Dynamique terrain : {rec.pitch_dynamic}")
             lines.append("")
             lines.append("📊 ANALYSE QUANTITATIVE :")
             lines.append(f"  • Probabilité fair Winamax (sans marge) : {rec.fair_bookmaker_prob_pct:.1f}%")
@@ -198,6 +203,8 @@ class DailyReport:
             lines.append(f"  • Marché       : {ls.market_name}")
             lines.append(f"  • Sélection    : {ls.selection_label}")
             lines.append(f"  • COTE OSÉE    : {ls.winamax_odds:.2f} (Haute rémunération)")
+            if ls.pitch_dynamic:
+                lines.append(f"  • Dynamique terrain : {ls.pitch_dynamic}")
             lines.append("")
             lines.append("📊 ANALYSE QUANTITATIVE & ESTIMATION DE L'EDGE :")
             lines.append(f"  • Probabilité bookmaker (sans marge)    : {ls.fair_bookmaker_prob_pct:.1f}%")

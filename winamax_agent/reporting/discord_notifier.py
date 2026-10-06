@@ -82,6 +82,8 @@ def format_discord_embed(report: DailyReport) -> Dict[str, Any]:
             lines.append(f"• Mise : {m.stake_eur:.2f} € (Option de secours)")
         else:
             lines.append(f"• Mise : {m.stake_eur:.2f} € | EV : {m.ev_pct:+.1f}%")
+        if m.pitch_dynamic:
+            lines.append(f"• Terrain : *{m.pitch_dynamic}*")
         fields.append({
             "name": f"MATCH DU JOUR {status_tag}",
             "value": "\n".join(lines),
@@ -108,6 +110,8 @@ def format_discord_embed(report: DailyReport) -> Dict[str, Any]:
             lines.append(f"• Mise : {rec.stake_eur:.2f} € (Option de secours)")
         else:
             lines.append(f"• Mise : {rec.stake_eur:.2f} € | EV : {rec.ev_pct:+.1f}%")
+        if rec.pitch_dynamic:
+            lines.append(f"• Terrain : *{rec.pitch_dynamic}*")
         fields.append({
             "name": f"PARI SIMPLE {status_tag}",
             "value": "\n".join(lines),
@@ -161,6 +165,8 @@ def format_discord_embed(report: DailyReport) -> Dict[str, Any]:
             lines.append(f"• Mise : {ls.stake_eur:.2f} € (Option de secours)")
         else:
             lines.append(f"• Mise : {ls.stake_eur:.2f} € | EV : {ls.ev_pct:+.1f}%")
+        if ls.pitch_dynamic:
+            lines.append(f"• Terrain : *{ls.pitch_dynamic}*")
         fields.append({
             "name": f"COTE OSÉE {status_tag}",
             "value": "\n".join(lines),

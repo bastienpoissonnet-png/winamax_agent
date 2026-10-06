@@ -39,6 +39,8 @@ def export_to_markdown(report: DailyReport, output_path: Path) -> Path:
         lines.append(f"- **Marché :** {m.market_name}")
         lines.append(f"- **Sélection retenue :** **{m.selection_label}**")
         lines.append(f"- **Cote Winamax :** `{m.winamax_odds:.2f}`")
+        if m.pitch_dynamic:
+            lines.append(f"- **Dynamique concrète de terrain :** *{m.pitch_dynamic}*")
 
         lines.append("\n### 📊 Métriques & Probabilités")
         lines.append("| Indicateur | Valeur |")
@@ -78,6 +80,8 @@ def export_to_markdown(report: DailyReport, output_path: Path) -> Path:
         lines.append(f"- **Marché :** {rec.market_name}")
         lines.append(f"- **Sélection retenue :** **{rec.selection_label}**")
         lines.append(f"- **Cote Winamax :** `{rec.winamax_odds:.2f}` (Sweet Spot [1.50 - 3.00])")
+        if rec.pitch_dynamic:
+            lines.append(f"- **Dynamique concrète de terrain :** *{rec.pitch_dynamic}*")
 
         lines.append("\n### 📊 Métriques & Probabilités")
         lines.append("| Indicateur | Valeur |")

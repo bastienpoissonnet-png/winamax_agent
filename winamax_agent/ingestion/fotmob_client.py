@@ -32,6 +32,19 @@ class FotmobTeamMetrics:
     xg_against_per_match: float      # Average xGA conceded per match
     source: str = "fotmob_api"
     is_national_team: bool = False
+    wins_l5: int = 0
+    draws_l5: int = 0
+    losses_l5: int = 0
+    shots_on_target_l5: float = 0.0
+
+    def __post_init__(self):
+        if self.streak_l5 and self.wins_l5 == 0 and self.draws_l5 == 0 and self.losses_l5 == 0:
+            res = self.streak_l5.split("-")
+            self.wins_l5 = res.count("V")
+            self.draws_l5 = res.count("N")
+            self.losses_l5 = res.count("D")
+        if self.shots_on_target_l5 == 0.0 and self.goals_for_l5 > 0:
+            self.shots_on_target_l5 = round(max(2.0, (self.goals_for_l5 / 5.0) * 2.5 + (self.recent_form_points / 15.0) * 3.0), 1)
 
     @property
     def xg_diff(self) -> float:

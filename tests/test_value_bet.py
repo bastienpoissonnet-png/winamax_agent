@@ -84,6 +84,104 @@ class TestValueBetEvaluation(unittest.TestCase):
         self.assertFalse(opp.is_value)
         self.assertIn("Cote trop élevée", opp.rejection_reason)
 
+    def test_anti_surprise_filter_rejects_losing_streak(self):
+        # Équipe sur une série de défaites : victoire sèche rejetée malgré EV > 0
+        opp = evaluate_bet(
+            competition="Ligue 1",
+            home_team="Nantes",
+            away_team="Reims",
+            market_type="1X2 (Résultat)",
+            selection="Victoire Nantes (1)",
+            selection_key="home",
+            winamax_odds=2.10,
+            fair_bookmaker_prob=0.45,
+            model_true_prob=0.58,  # EV = +21.8%
+            min_ev_threshold=0.0,
+            min_odds=1.50,
+            max_odds=3.00,
+            min_prob_threshold=0.40,
+            team_streak="N-V-N-D-D",  # se termine par 2 défaites consécutives
+            wins_l5=1,
+            losses_l5=2,
+            recent_form_points=5.0,
+        )
+        self.assertFalse(opp.is_value)
+        self.assertIn("Cohérence sportive", opp.rejection_reason)
+        self.assertIn("série de défaites", opp.rejection_reason)
+
+    def test_anti_surprise_filter_rejects_zero_recent_wins(self):
+        # Équipe sans aucune victoire récente : victoire sèche rejetée malgré EV > 0
+        opp = evaluate_bet(
+            competition="Premier League",
+            home_team="Everton",
+            away_team="Wolves",
+            market_type="1X2 (Résultat)",
+            selection="Victoire Everton (1)",
+            selection_key="home",
+            winamax_odds=2.00,
+            fair_bookmaker_prob=0.48,
+            model_true_prob=0.56,
+            min_ev_threshold=0.0,
+            min_odds=1.50,
+            max_odds=3.00,
+            min_prob_threshold=0.40,
+            team_streak="N-D-N-D-N",
+            wins_l5=0,
+            losses_l5=2,
+            recent_form_points=3.0,
+        )
+        self.assertFalse(opp.is_value)
+        self.assertIn("Cohérence sportive", opp.rejection_reason)
+        self.assertIn("aucune victoire récente", opp.rejection_reason)
+
+    def test_anti_surprise_filter_accepts_positive_momentum(self):
+        # Équipe en dynamique positive : victoire sèche acceptée
+        opp = evaluate_bet(
+            competition="Premier League",
+            home_team="Arsenal",
+            away_team="Chelsea",
+            market_type="1X2 (Résultat)",
+            selection="Victoire Arsenal (1)",
+            selection_key="home",
+            winamax_odds=1.80,
+            fair_bookmaker_prob=0.52,
+            model_true_prob=0.62,
+            min_ev_threshold=0.0,
+            min_odds=1.50,
+            max_odds=3.00,
+            min_prob_threshold=0.40,
+            team_streak="V-V-V-V-D",
+            wins_l5=4,
+            losses_l5=1,
+            recent_form_points=12.0,
+        )
+        self.assertTrue(opp.is_value)
+        self.assertEqual(opp.rejection_reason, "")
+
+    def test_anti_surprise_filter_does_not_block_double_chance(self):
+        # Double Chance n'est pas une victoire sèche : non rejetée par l'anti-surprise
+        opp = evaluate_bet(
+            competition="Ligue 1",
+            home_team="Nantes",
+            away_team="Reims",
+            market_type="Double Chance (Sécurisation)",
+            selection="Nantes ou Nul (1X)",
+            selection_key="1x",
+            winamax_odds=1.40,
+            fair_bookmaker_prob=0.68,
+            model_true_prob=0.75,
+            min_ev_threshold=0.0,
+            min_odds=1.30,
+            max_odds=3.00,
+            min_prob_threshold=0.40,
+            team_streak="D-D-D-N-D",
+            wins_l5=0,
+            losses_l5=4,
+            recent_form_points=1.0,
+        )
+        self.assertTrue(opp.is_value)
+
 
 if __name__ == "__main__":
     unittest.main()
+

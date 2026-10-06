@@ -52,6 +52,30 @@ class WinamaxBettingAgent:
         from winamax_agent.reporting.discord_notifier import send_discord_report
         return send_discord_report(report, webhook_url=self.config.discord_webhook_url)
 
+    def _is_solid_winner_pick(self, rec: BetRecommendation) -> bool:
+        """Impose une probabilité de réalisation solide pour les sélections majeures (Section 1 et 2):
+        - Victoire sèche (1X2) : P_modèle >= 55%
+        - Double chance (1X, X2) : P_modèle >= 65%
+        - Autres marchés (Totaux) : P_modèle >= 60%
+        """
+        label = rec.selection_label
+        p_pct = rec.model_true_prob_pct
+
+        is_straight = any(k in label for k in ["(1)", "(2)"]) or ("Victoire" in label and "Nul" not in label)
+        is_dc = any(k in label for k in ["(1X)", "(X2)", "(12)", "ou Nul"])
+
+        if is_straight:
+            if p_pct < 55.0:
+                return False
+        elif is_dc:
+            if p_pct < 65.0:
+                return False
+        else:
+            if p_pct < 60.0:
+                return False
+
+        return True
+
     def fetch_fixtures(self) -> List[MatchFixture]:
         """Fetches upcoming fixtures from The Odds API or mock simulation source."""
         if self.config.simulation_mode or not self.odds_client:
@@ -81,8 +105,8 @@ class WinamaxBettingAgent:
         """Runs the complete quantitative analysis on a single match with market anchor."""
         opportunities: List[ValueOpportunity] = []
 
-        home_metrics = self.stats_provider.get_team_metrics(fixture.home_team)
-        away_metrics = self.stats_provider.get_team_metrics(fixture.away_team)
+        home_metrics = self.stats_provider.get_team_metrics(fixture.home_team, is_home=True)
+        away_metrics = self.stats_provider.get_team_metrics(fixture.away_team, is_home=False)
 
         # 1. Simulation Poisson / Dixon-Coles xG
         match_sim = self.poisson_engine.simulate_match(home_metrics, away_metrics)
@@ -115,6 +139,32 @@ class WinamaxBettingAgent:
                     o_val = h2h_odds[outcome_key]
                     if o_val < self.config.absolute_min_odds or o_val > 10.00:
                         continue
+
+                    # Données sportives pour filtre de cohérence anti-surprise
+                    t_streak = ""
+                    w_l5 = None
+                    l_l5 = None
+                    pts_l5 = None
+                    if outcome_key == "home":
+                        t_streak = home_metrics.streak_l5
+                        w_l5 = home_metrics.wins_l5
+                        l_l5 = home_metrics.losses_l5
+                        pts_l5 = home_metrics.recent_form_points
+                    elif outcome_key == "away":
+                        t_streak = away_metrics.streak_l5
+                        w_l5 = away_metrics.wins_l5
+                        l_l5 = away_metrics.losses_l5
+                        pts_l5 = away_metrics.recent_form_points
+
+                    pitch_dyn = self.stats_provider.generate_pitch_dynamic(
+                        home_team=fixture.home_team,
+                        away_team=fixture.away_team,
+                        home_metrics=home_metrics,
+                        away_metrics=away_metrics,
+                        market_key="1X2 (Résultat)",
+                        selection_key=outcome_key,
+                    )
+
                     opp = evaluate_bet(
                         competition=fixture.competition_name,
                         home_team=fixture.home_team,
@@ -130,6 +180,11 @@ class WinamaxBettingAgent:
                         max_odds=self.config.max_odds,
                         min_prob_threshold=self.config.min_prob_threshold,
                         min_prob_low_odds=self.config.min_prob_low_odds,
+                        team_streak=t_streak,
+                        wins_l5=w_l5,
+                        losses_l5=l_l5,
+                        recent_form_points=pts_l5,
+                        pitch_dynamic=pitch_dyn,
                     )
                     opportunities.append(opp)
 
@@ -156,6 +211,14 @@ class WinamaxBettingAgent:
                 true_prob_x2 = calibrated_probs.get("x2", fair_prob_x2)
 
                 if self.config.absolute_min_odds <= odds_1x <= 10.00:
+                    pitch_dyn_1x = self.stats_provider.generate_pitch_dynamic(
+                        home_team=fixture.home_team,
+                        away_team=fixture.away_team,
+                        home_metrics=home_metrics,
+                        away_metrics=away_metrics,
+                        market_key="Double Chance (Sécurisation)",
+                        selection_key="1x",
+                    )
                     opp_1x = evaluate_bet(
                         competition=fixture.competition_name,
                         home_team=fixture.home_team,
@@ -171,10 +234,19 @@ class WinamaxBettingAgent:
                         max_odds=self.config.max_odds,
                         min_prob_threshold=self.config.min_prob_threshold,
                         min_prob_low_odds=self.config.min_prob_low_odds,
+                        pitch_dynamic=pitch_dyn_1x,
                     )
                     opportunities.append(opp_1x)
 
                 if self.config.absolute_min_odds <= odds_x2 <= 10.00:
+                    pitch_dyn_x2 = self.stats_provider.generate_pitch_dynamic(
+                        home_team=fixture.home_team,
+                        away_team=fixture.away_team,
+                        home_metrics=home_metrics,
+                        away_metrics=away_metrics,
+                        market_key="Double Chance (Sécurisation)",
+                        selection_key="x2",
+                    )
                     opp_x2 = evaluate_bet(
                         competition=fixture.competition_name,
                         home_team=fixture.home_team,
@@ -190,6 +262,7 @@ class WinamaxBettingAgent:
                         max_odds=self.config.max_odds,
                         min_prob_threshold=self.config.min_prob_threshold,
                         min_prob_low_odds=self.config.min_prob_low_odds,
+                        pitch_dynamic=pitch_dyn_x2,
                     )
                     opportunities.append(opp_x2)
 
@@ -226,6 +299,15 @@ class WinamaxBettingAgent:
                         edge = min(self.config.max_realistic_edge, max(-self.config.max_realistic_edge, p_true - p_fair))
                         p_calibrated = p_fair + edge
 
+                        pitch_dyn_tot = self.stats_provider.generate_pitch_dynamic(
+                            home_team=fixture.home_team,
+                            away_team=fixture.away_team,
+                            home_metrics=home_metrics,
+                            away_metrics=away_metrics,
+                            market_key=market_name,
+                            selection_key=sel_k,
+                        )
+
                         opp = evaluate_bet(
                             competition=fixture.competition_name,
                             home_team=fixture.home_team,
@@ -241,6 +323,7 @@ class WinamaxBettingAgent:
                             max_odds=self.config.max_odds,
                             min_prob_threshold=self.config.min_prob_threshold,
                             min_prob_low_odds=self.config.min_prob_low_odds,
+                            pitch_dynamic=pitch_dyn_tot,
                         )
                         opportunities.append(opp)
 
@@ -278,11 +361,24 @@ class WinamaxBettingAgent:
         # Retenir uniquement les opportunités où la mise est > 0 € (non rejetées par le sizing de risque)
         confirmed_value_opps = [o for o in value_opps if o.recommended_stake > 0.0]
 
-        # Fonction de classement priorisant la forte probabilité et les marchés solides (Double Chance, Over 1.5, Under 3.5)
+        # Fonction de classement priorisant la forte probabilité et les équipes en dynamique positive
         def score_ranking(opp: ValueOpportunity) -> float:
-            # Score de solidité = Probabilité réelle * (1 + EV) * bonus_marché_sécurisé
+            prob_factor = opp.model_true_prob ** 1.3
+            is_home_pick = opp.selection_key in ("home", "1x")
+            is_away_pick = opp.selection_key in ("away", "x2")
+
+            backed_metrics = None
+            if is_home_pick:
+                backed_metrics = self.stats_provider.get_team_metrics(opp.home_team, is_home=True)
+            elif is_away_pick:
+                backed_metrics = self.stats_provider.get_team_metrics(opp.away_team, is_home=False)
+
+            dynamic_bonus = 1.0
+            if backed_metrics:
+                dynamic_bonus += (backed_metrics.recent_form_points / 15.0) * 0.25 + (backed_metrics.wins_l5 / 5.0) * 0.15
+
             solid_bonus = 1.30 if opp.is_solid_market else 1.0
-            return opp.model_true_prob * (1.0 + opp.ev) * solid_bonus
+            return prob_factor * (1.0 + opp.ev) * dynamic_bonus * solid_bonus
 
         confirmed_value_opps.sort(key=score_ranking, reverse=True)
 
@@ -294,8 +390,8 @@ class WinamaxBettingAgent:
             )
             kickoff = matching_fix.commence_time if matching_fix else "N/A"
 
-            home_metrics = self.stats_provider.get_team_metrics(opp.home_team)
-            away_metrics = self.stats_provider.get_team_metrics(opp.away_team)
+            home_metrics = self.stats_provider.get_team_metrics(opp.home_team, is_home=True)
+            away_metrics = self.stats_provider.get_team_metrics(opp.away_team, is_home=False)
 
             # Generate 3-point analytical justification
             context = self.stats_provider.generate_context_justification(
@@ -337,6 +433,7 @@ class WinamaxBettingAgent:
                 point_1_xg=context.xg_justification,
                 point_2_h2h_tactics=context.h2h_tactical_justification,
                 point_3_context_form=context.team_context_justification,
+                pitch_dynamic=context.pitch_dynamic,
             )
             recommendations.append(rec)
 
@@ -361,7 +458,8 @@ class WinamaxBettingAgent:
             r for r in recommendations
             if is_match_today(r.kickoff) and r.winamax_odds >= self.config.absolute_min_odds
         ]
-        match_of_the_day = today_recs[0] if today_recs else None
+        solid_today_recs = [r for r in today_recs if self._is_solid_winner_pick(r)]
+        match_of_the_day = solid_today_recs[0] if solid_today_recs else (today_recs[0] if today_recs else None)
 
         # Mode de secours Section 1 : si aucune EV > 0 aujourd'hui
         if not match_of_the_day:
@@ -380,8 +478,13 @@ class WinamaxBettingAgent:
 
                 if today_opps:
                     def today_fallback_score(o: ValueOpportunity) -> float:
+                        prob_p = o.model_true_prob
+                        if o.selection_key in ("home", "away") and prob_p < 0.55:
+                            prob_p *= 0.5
+                        elif o.selection_key in ("1x", "x2") and prob_p < 0.65:
+                            prob_p *= 0.7
                         solid_bonus = 1.30 if o.is_solid_market else 1.0
-                        return (o.model_true_prob * 1.5 + (1.0 + o.ev)) * solid_bonus
+                        return (prob_p * 2.0 + (1.0 + o.ev)) * solid_bonus
 
                     today_opps.sort(key=today_fallback_score, reverse=True)
                     best_today_fb = today_opps[0]
@@ -391,8 +494,8 @@ class WinamaxBettingAgent:
                         None,
                     )
                     kickoff = matching_fix.commence_time if matching_fix else "N/A"
-                    home_metrics = self.stats_provider.get_team_metrics(best_today_fb.home_team)
-                    away_metrics = self.stats_provider.get_team_metrics(best_today_fb.away_team)
+                    home_metrics = self.stats_provider.get_team_metrics(best_today_fb.home_team, is_home=True)
+                    away_metrics = self.stats_provider.get_team_metrics(best_today_fb.away_team, is_home=False)
                     context = self.stats_provider.generate_context_justification(
                         home_team=best_today_fb.home_team,
                         away_team=best_today_fb.away_team,
@@ -432,6 +535,7 @@ class WinamaxBettingAgent:
                         point_1_xg=context.xg_justification,
                         point_2_h2h_tactics=context.h2h_tactical_justification,
                         point_3_context_form=context.team_context_justification,
+                        pitch_dynamic=context.pitch_dynamic,
                         is_fallback=True,
                         status_badge="🟡 CHOIX DE SECOURS (SOUS-OPTIMAL / RECOMMANDATION PAR DÉFAUT)",
                         warning_message=warning,
@@ -440,7 +544,12 @@ class WinamaxBettingAgent:
         # -------------------------------------------------------------
         # Section 2 : Le Meilleur Pari Simple (Sweet spot 1.50 - 3.00 sur la semaine)
         # -------------------------------------------------------------
-        top_rec = recommendations[0] if recommendations else None
+        sweet_spot_solid = [
+            r for r in recommendations
+            if self.config.min_odds <= r.winamax_odds <= self.config.max_odds
+            and self._is_solid_winner_pick(r)
+        ]
+        top_rec = sweet_spot_solid[0] if sweet_spot_solid else None
 
         # Collecter les autres opportunités distinctes validées (EV > 0)
         primary_match_keys = set()
@@ -476,8 +585,8 @@ class WinamaxBettingAgent:
                 None,
             )
             kickoff = matching_fix.commence_time if matching_fix else "N/A"
-            home_metrics = self.stats_provider.get_team_metrics(best_simple_fb.home_team)
-            away_metrics = self.stats_provider.get_team_metrics(best_simple_fb.away_team)
+            home_metrics = self.stats_provider.get_team_metrics(best_simple_fb.home_team, is_home=True)
+            away_metrics = self.stats_provider.get_team_metrics(best_simple_fb.away_team, is_home=False)
             context = self.stats_provider.generate_context_justification(
                 home_team=best_simple_fb.home_team,
                 away_team=best_simple_fb.away_team,
@@ -517,6 +626,7 @@ class WinamaxBettingAgent:
                 point_1_xg=context.xg_justification,
                 point_2_h2h_tactics=context.h2h_tactical_justification,
                 point_3_context_form=context.team_context_justification,
+                pitch_dynamic=context.pitch_dynamic,
                 is_fallback=True,
                 status_badge="🟡 CHOIX DE SECOURS (SOUS-OPTIMAL / RECOMMANDATION PAR DÉFAUT)",
                 warning_message=warning,
@@ -596,9 +706,13 @@ class WinamaxBettingAgent:
         longshot_candidates: List[ValueOpportunity] = []
         for opp in all_opps:
             if (
-                4.00 <= opp.odds <= 10.00
+                self.config.longshot_min_odds <= opp.odds <= self.config.longshot_max_odds
                 and opp.ev > self.config.min_ev_threshold
             ):
+                # Filtre de cohérence sportive : exclure victoire sèche d'une équipe en série de défaites ou sans victoire
+                if opp.selection_key in ("home", "away") and opp.rejection_reason and "Cohérence sportive" in opp.rejection_reason:
+                    continue
+
                 micro_kelly = calculate_micro_kelly_stake(
                     true_prob=opp.model_true_prob,
                     odds=opp.odds,
@@ -624,8 +738,8 @@ class WinamaxBettingAgent:
                 None,
             )
             kickoff = matching_fix.commence_time if matching_fix else "N/A"
-            home_metrics = self.stats_provider.get_team_metrics(best_ls.home_team)
-            away_metrics = self.stats_provider.get_team_metrics(best_ls.away_team)
+            home_metrics = self.stats_provider.get_team_metrics(best_ls.home_team, is_home=True)
+            away_metrics = self.stats_provider.get_team_metrics(best_ls.away_team, is_home=False)
             context = self.stats_provider.generate_context_justification(
                 home_team=best_ls.home_team,
                 away_team=best_ls.away_team,
@@ -662,12 +776,13 @@ class WinamaxBettingAgent:
                 point_1_xg=context.xg_justification,
                 point_2_h2h_tactics=context.h2h_tactical_justification,
                 point_3_context_form=context.team_context_justification,
+                pitch_dynamic=context.pitch_dynamic,
             )
         elif all_opps:
             # Mode de secours Section 4 : strictement comprise entre 4.00 et 10.00
             high_odds_opps = [
                 o for o in all_opps
-                if 4.00 <= o.odds <= 10.00
+                if self.config.longshot_min_odds <= o.odds <= self.config.longshot_max_odds
             ]
             if high_odds_opps:
                 high_odds_opps.sort(key=lambda o: (o.ev, o.model_true_prob), reverse=True)
@@ -678,8 +793,8 @@ class WinamaxBettingAgent:
                     None,
                 )
                 kickoff = matching_fix.commence_time if matching_fix else "N/A"
-                home_metrics = self.stats_provider.get_team_metrics(best_high_fb.home_team)
-                away_metrics = self.stats_provider.get_team_metrics(best_high_fb.away_team)
+                home_metrics = self.stats_provider.get_team_metrics(best_high_fb.home_team, is_home=True)
+                away_metrics = self.stats_provider.get_team_metrics(best_high_fb.away_team, is_home=False)
                 context = self.stats_provider.generate_context_justification(
                     home_team=best_high_fb.home_team,
                     away_team=best_high_fb.away_team,
@@ -718,6 +833,7 @@ class WinamaxBettingAgent:
                     point_1_xg=context.xg_justification,
                     point_2_h2h_tactics=context.h2h_tactical_justification,
                     point_3_context_form=context.team_context_justification,
+                    pitch_dynamic=context.pitch_dynamic,
                     is_fallback=True,
                     status_badge="🟡 CHOIX DE SECOURS (SOUS-OPTIMAL / RECOMMANDATION PAR DÉFAUT)",
                     warning_message=warning,

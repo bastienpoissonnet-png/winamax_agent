@@ -25,6 +25,10 @@ class TeamRecentForm:
     streak_l5: str               # e.g. "V-V-N-V-D"
     form_rating: float           # Normalized rating (0.0 to 1.0)
     last_match_date: str
+    wins_l5: int = 0
+    draws_l5: int = 0
+    losses_l5: int = 0
+    shots_on_target_l5: float = 0.0
 
 
 class FootballDataClient:
@@ -153,6 +157,11 @@ class FootballDataClient:
             ga = sum(m["goals_against"] for m in last_5)
             streak = "-".join(m["res"] for m in last_5)
             last_date = last_5[-1]["date"] if last_5 else ""
+            res_list = [m["res"] for m in last_5]
+            w = res_list.count("V")
+            d = res_list.count("N")
+            l = res_list.count("D")
+            sot = round(max(2.0, (gf / 5.0) * 2.5 + (pts / 15.0) * 3.0), 1)
 
             self._memory_cache[team_name] = TeamRecentForm(
                 team_name=team_name,
@@ -163,6 +172,10 @@ class FootballDataClient:
                 streak_l5=streak,
                 form_rating=round(pts / 15.0, 3),
                 last_match_date=last_date,
+                wins_l5=w,
+                draws_l5=d,
+                losses_l5=l,
+                shots_on_target_l5=sot,
             )
 
     def get_team_form(self, raw_name: str) -> Optional[TeamRecentForm]:
@@ -204,6 +217,11 @@ class FootballDataClient:
             "Borussia Dortmund": (9, 9, 7, "D-V-N-V-D"),
         }
         for name, (pts, gf, ga, streak) in data.items():
+            res_list = streak.split("-")
+            w = res_list.count("V")
+            d = res_list.count("N")
+            l = res_list.count("D")
+            sot = round(max(2.0, (gf / 5.0) * 2.5 + (pts / 15.0) * 3.0), 1)
             self._memory_cache[name] = TeamRecentForm(
                 team_name=name,
                 matches_played=5,
@@ -213,4 +231,8 @@ class FootballDataClient:
                 streak_l5=streak,
                 form_rating=round(pts / 15.0, 3),
                 last_match_date="2026-10-04T20:00:00Z",
+                wins_l5=w,
+                draws_l5=d,
+                losses_l5=l,
+                shots_on_target_l5=sot,
             )
