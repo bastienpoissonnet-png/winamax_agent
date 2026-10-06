@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "winamax-betting-agent"
+version = "1.0.0"
+description = "Autonomous quantitative sports betting decision agent for Winamax (Ligue 1, Premier League, Champions League)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.28.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+]
+
+[project.scripts]
+winamax-agent = "winamax_agent.cli:main"

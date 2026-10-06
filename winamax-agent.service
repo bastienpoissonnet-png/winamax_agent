@@ -1,0 +1,15 @@
+[Unit]
+Description=Winamax Sports Betting Value Agent Worker
+After=network.target
+
+[Service]
+Type=simple
+User=bastien
+WorkingDirectory=/home/bastien/winamax_agent
+ExecStart=/home/bastien/winamax_agent/.venv/bin/python3 -m winamax_agent.cli --schedule --interval-hours 6
+Restart=always
+RestartSec=30
+EnvironmentFile=/home/bastien/winamax_agent/.env
+
+[Install]
+WantedBy=multi-user.target

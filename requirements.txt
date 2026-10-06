@@ -1,0 +1,6 @@
+# Core dependencies (Standard library fallback is built-in for zero-dependency runs)
+requests>=2.28.0
+python-dotenv>=1.0.0
+
+# Development and testing
+pytest>=7.0.0
