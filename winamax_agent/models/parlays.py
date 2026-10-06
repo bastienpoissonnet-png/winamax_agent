@@ -102,8 +102,11 @@ def find_best_parlays(
         - Combined EV strictly positive (> min_ev)
         - Kelly staking capped at max_stake (15.0 € max)
     """
-    # Filter candidate legs for high confidence
-    valid_legs = [leg for leg in candidate_legs if leg.model_true_prob >= min_leg_prob and leg.odds >= 1.15]
+    # Filter candidate legs for high confidence and strict odds cap (<= 10.00)
+    valid_legs = [
+        leg for leg in candidate_legs
+        if leg.model_true_prob >= min_leg_prob and 1.15 <= leg.odds <= 10.00
+    ]
 
     if len(valid_legs) < 2:
         return []
@@ -124,8 +127,8 @@ def find_best_parlays(
                 total_odds *= leg.odds
             total_odds = round(total_odds, 2)
 
-            # Check target odds range [1.80, 4.00]
-            if total_odds < min_odds or total_odds > max_odds:
+            # Check target odds range [min_odds, max_odds] and strict ceiling (<= 10.00)
+            if total_odds < min_odds or total_odds > max_odds or total_odds > 10.00:
                 continue
 
             # Calculate combined true probability (product of independent probabilities)
@@ -187,18 +190,21 @@ def find_fallback_parlay(
     """Builds a fallback 2-leg parlay using the two highest probability selections from distinct matches.
 
     Used when no parlay satisfies all strict value criteria (EV > 0).
+    Categorically rejects any leg with odds > 10.00 (e.g. Viking FK @ 15.00).
     """
-    if len(candidate_legs) < 2:
+    # Strict filter on legs: reject any odds < 1.05 or > 10.00
+    valid_legs = [leg for leg in candidate_legs if 1.05 <= leg.odds <= 10.00]
+    if len(valid_legs) < 2:
         return None
 
     # Sort legs by model true probability descending
-    sorted_legs = sorted(candidate_legs, key=lambda l: l.model_true_prob, reverse=True)
+    sorted_legs = sorted(valid_legs, key=lambda l: l.model_true_prob, reverse=True)
 
-    # Find the top 2 legs from distinct matches
+    # Find the top 2 legs from distinct matches with combined total odds <= 10.00
     leg1 = sorted_legs[0]
     leg2: Optional[ParlayLeg] = None
     for leg in sorted_legs[1:]:
-        if leg.match_title != leg1.match_title:
+        if leg.match_title != leg1.match_title and round(leg1.odds * leg.odds, 2) <= 10.00:
             leg2 = leg
             break
 

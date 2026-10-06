@@ -1,8 +1,8 @@
 # 🎯 Rapport d'Aide à la Décision - Paris Sportifs (Winamax)
 
-*Généré le : 2026-10-06 15:58:46*
+*Généré le : 2026-10-06 16:34:48*
 
-**Marchés scannés :** 85 sur 8 rencontres | **Opportunités à valeur (EV > 0.5%) :** 10
+**Marchés scannés :** 83 sur 8 rencontres | **Opportunités à valeur (EV > 0.5%) :** 10
 
 ---
 ## 📅 Section 1 : Le Match du Jour (Uniquement aujourd'hui)
@@ -135,6 +135,7 @@
 | France vs Italie | Plus de 2.5 buts (Over 2.5) | `1.90` | `+3.3%` | 54.4% | **9.30 €** |
 | Espagne vs Danemark | Victoire Espagne (1) | `1.52` | `+0.9%` | 66.3% | **10.00 €** |
 | France vs Italie | Victoire France (1) | `1.68` | `+0.9%` | 60.1% | **10.00 €** |
+| Arsenal vs Chelsea | Victoire Arsenal (1) | `1.82` | `+4.2%` | 57.2% | **12.73 €** |
 
 ### Combinés Alternatifs
 | Sélections | Cote Totale | EV Combinée | Prob. Cumulée | Mise Suggérée |

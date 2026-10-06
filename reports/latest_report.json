@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-10-06 15:58:46",
+  "timestamp": "2026-10-06 16:34:48",
   "total_matches_analyzed": 8,
-  "total_markets_analyzed": 85,
+  "total_markets_analyzed": 83,
   "positive_ev_count": 10,
   "match_of_the_day": {
     "competition": "Ligue 1 McDonald's",
@@ -154,6 +154,28 @@
       "point_1_xg": "Métrique xG réelle (FotMob (Ligue des Nations)) : France génère en moyenne 2.15 xG/m pour 0.85 xGA concédés (différentiel net +1.30 sur 6 matchs). En face, Italie affiche 1.55 xG et 1.20 xGA (différentiel +0.35). L'écart de création brute valide un net ascendant statistique.",
       "point_2_h2h_tactics": "Dynamique tactique & confrontations : Le schéma tactique confronte le volume offensif à domicile (2.15 xG/m) face à un bloc adverse concédant régulièrement des situations franches (1.20 xGA/m). Les métriques d'efficacité confirment un avantage structurel.",
       "point_3_context_form": "Forme récente & contexte (FotMob) : France totalise 11/15 pts sur ses 5 derniers matchs (série V-V-N-V-D, 9 buts marqués, 4 concédés), contre 9/15 pts pour Italie (série V-N-V-D-N, 7 marqués, 6 concédés). Le différentiel d'efficacité valide l'espérance de gain.",
+      "is_fallback": false,
+      "status_badge": "🟢 OPPORTUNITÉ VALIDÉE (EV > 0)",
+      "warning_message": ""
+    },
+    {
+      "competition": "Premier League",
+      "match_title": "Arsenal vs Chelsea",
+      "kickoff": "2026-10-07T17:30:00Z",
+      "market_name": "1X2 (Résultat)",
+      "selection_label": "Victoire Arsenal (1)",
+      "bookmaker": "Winamax",
+      "winamax_odds": 1.82,
+      "raw_implied_prob_pct": 54.94505494505494,
+      "fair_bookmaker_prob_pct": 52.293577981651374,
+      "model_true_prob_pct": 57.239385338341634,
+      "edge_pct": 4.945807356690257,
+      "ev_pct": 4.175681315781765,
+      "stake_eur": 12.73,
+      "stake_details": "Palier haute confiance (cote 1.82) : sizing calibré entre 10 € et 20 €.",
+      "point_1_xg": "Métrique xG réelle (Understat) : Arsenal génère en moyenne 2.08 xG/m pour 0.72 xGA concédés (différentiel net +1.36 sur 26 matchs). En face, Chelsea affiche 1.92 xG et 1.25 xGA (différentiel +0.67). L'écart de création brute valide un net ascendant statistique.",
+      "point_2_h2h_tactics": "Dynamique tactique & confrontations : Le schéma tactique confronte le volume offensif à domicile (2.08 xG/m) face à un bloc adverse concédant régulièrement des situations franches (1.25 xGA/m). Les métriques d'efficacité confirment un avantage structurel.",
+      "point_3_context_form": "Forme récente & contexte (Football-Data.org) : Arsenal totalise 13/15 pts sur ses 5 derniers matchs (série V-V-N-V-V, 12 buts marqués, 3 concédés), contre 10/15 pts pour Chelsea (série V-V-N-D-V, 10 marqués, 7 concédés). Le différentiel d'efficacité valide l'espérance de gain.",
       "is_fallback": false,
       "status_badge": "🟢 OPPORTUNITÉ VALIDÉE (EV > 0)",
       "warning_message": ""

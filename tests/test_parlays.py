@@ -117,6 +117,26 @@ class TestParlaysGenerator(unittest.TestCase):
         self.assertEqual(fb.legs[0].match_title, "France vs Italie")
         self.assertEqual(fb.legs[1].match_title, "Espagne vs Danemark")
 
+    def test_rejection_of_legs_exceeding_ten_odds(self):
+        from winamax_agent.models.parlays import find_fallback_parlay
+        viking_leg = ParlayLeg(
+            match_title="Viking FK vs Molde",
+            competition="Eliteserien",
+            kickoff="2026-10-06T18:00:00Z",
+            market_type="1X2",
+            selection="Victoire Viking FK (1)",
+            odds=15.00,
+            model_true_prob=0.99,  # Even with high probability
+            fair_prob=0.06,
+        )
+        # Viking leg @ 15.00 must be rejected from best parlays
+        parlays = find_best_parlays(candidate_legs=[self.leg_fra, viking_leg])
+        self.assertEqual(len(parlays), 0)
+
+        # Viking leg @ 15.00 must also be rejected from fallback parlays
+        fb = find_fallback_parlay(candidate_legs=[self.leg_fra, viking_leg])
+        self.assertIsNone(fb)
+
 
 if __name__ == "__main__":
     unittest.main()

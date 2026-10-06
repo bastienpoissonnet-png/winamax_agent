@@ -113,7 +113,7 @@ class WinamaxBettingAgent:
 
                 for outcome_key in ["home", "draw", "away"]:
                     o_val = h2h_odds[outcome_key]
-                    if o_val < self.config.absolute_min_odds:
+                    if o_val < self.config.absolute_min_odds or o_val > 10.00:
                         continue
                     opp = evaluate_bet(
                         competition=fixture.competition_name,
@@ -155,7 +155,7 @@ class WinamaxBettingAgent:
                 true_prob_1x = calibrated_probs.get("1x", fair_prob_1x)
                 true_prob_x2 = calibrated_probs.get("x2", fair_prob_x2)
 
-                if odds_1x >= self.config.absolute_min_odds:
+                if self.config.absolute_min_odds <= odds_1x <= 10.00:
                     opp_1x = evaluate_bet(
                         competition=fixture.competition_name,
                         home_team=fixture.home_team,
@@ -174,7 +174,7 @@ class WinamaxBettingAgent:
                     )
                     opportunities.append(opp_1x)
 
-                if odds_x2 >= self.config.absolute_min_odds:
+                if self.config.absolute_min_odds <= odds_x2 <= 10.00:
                     opp_x2 = evaluate_bet(
                         competition=fixture.competition_name,
                         home_team=fixture.home_team,
@@ -213,7 +213,7 @@ class WinamaxBettingAgent:
 
                     for sel_k, sel_txt in [(over_k, over_txt), (under_k, under_txt)]:
                         o_val = pair_odds[sel_k]
-                        if o_val < self.config.absolute_min_odds:
+                        if o_val < self.config.absolute_min_odds or o_val > 10.00:
                             continue
                         p_fair = fair_pair[sel_k]
                         p_raw_model = raw_model_probs.get(sel_k, p_fair)
@@ -369,7 +369,7 @@ class WinamaxBettingAgent:
             if today_fixtures:
                 today_opps: List[ValueOpportunity] = []
                 for opp in all_opps:
-                    if opp.odds < self.config.absolute_min_odds:
+                    if opp.odds < self.config.absolute_min_odds or opp.odds > 10.00:
                         continue
                     matching_fix = next(
                         (f for f in today_fixtures if f.home_team == opp.home_team and f.away_team == opp.away_team),
@@ -441,12 +441,28 @@ class WinamaxBettingAgent:
         # Section 2 : Le Meilleur Pari Simple (Sweet spot 1.50 - 3.00 sur la semaine)
         # -------------------------------------------------------------
         top_rec = recommendations[0] if recommendations else None
-        secondary_recs = recommendations[1:6] if len(recommendations) > 1 else []
+
+        # Collecter les autres opportunités distinctes validées (EV > 0)
+        primary_match_keys = set()
+        if top_rec:
+            primary_match_keys.add((top_rec.match_title, top_rec.selection_label))
+        if match_of_the_day:
+            primary_match_keys.add((match_of_the_day.match_title, match_of_the_day.selection_label))
+
+        secondary_recs: List[BetRecommendation] = []
+        for r in recommendations:
+            key = (r.match_title, r.selection_label)
+            if key not in primary_match_keys and not r.is_fallback and r.ev_pct > 0:
+                secondary_recs.append(r)
+                if len(secondary_recs) >= 6:
+                    break
 
         # Mode de secours Section 2 : si aucun pari simple à EV > 0 sur la semaine
         if not top_rec and all_opps:
             sweet_spot_opps = [o for o in all_opps if self.config.min_odds <= o.odds <= self.config.max_odds]
-            pool = sweet_spot_opps if sweet_spot_opps else all_opps
+            pool = sweet_spot_opps if sweet_spot_opps else [
+                o for o in all_opps if self.config.absolute_min_odds <= o.odds <= 10.00
+            ]
 
             def simple_fallback_score(o: ValueOpportunity) -> float:
                 solid_bonus = 1.25 if o.is_solid_market else 1.0
@@ -553,6 +569,8 @@ class WinamaxBettingAgent:
         if not top_parlay and len(all_opps) >= 2:
             broader_legs: List[ParlayLeg] = []
             for opp in all_opps:
+                if opp.odds < self.config.absolute_min_odds or opp.odds > 10.00:
+                    continue
                 matching_fix = next(
                     (f for f in fixtures if f.home_team == opp.home_team and f.away_team == opp.away_team),
                     None,
@@ -578,8 +596,7 @@ class WinamaxBettingAgent:
         longshot_candidates: List[ValueOpportunity] = []
         for opp in all_opps:
             if (
-                opp.odds >= self.config.longshot_min_odds
-                and opp.odds <= self.config.longshot_max_odds
+                4.00 <= opp.odds <= 10.00
                 and opp.ev > self.config.min_ev_threshold
             ):
                 micro_kelly = calculate_micro_kelly_stake(
@@ -647,10 +664,10 @@ class WinamaxBettingAgent:
                 point_3_context_form=context.team_context_justification,
             )
         elif all_opps:
-            # Mode de secours Section 4 : cote comprise entre longshot_min_odds et longshot_max_odds (4.00 à 10.00)
+            # Mode de secours Section 4 : strictement comprise entre 4.00 et 10.00
             high_odds_opps = [
                 o for o in all_opps
-                if self.config.longshot_min_odds <= o.odds <= self.config.longshot_max_odds
+                if 4.00 <= o.odds <= 10.00
             ]
             if high_odds_opps:
                 high_odds_opps.sort(key=lambda o: (o.ev, o.model_true_prob), reverse=True)

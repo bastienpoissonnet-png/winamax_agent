@@ -15,8 +15,40 @@ DISCORD_COLOR_GREEN = 0x2ECC71  # 3066993 - All selections validated EV > 0
 DISCORD_COLOR_YELLOW = 0xF1C40F # 15844351 - Contains fallback / defensive recommendations
 
 
+def format_compact_selection(label: str) -> str:
+    """Formats verbose selection label into compact shorthand (e.g. 1X, X2, 1, N, 2, Over 2.5)."""
+    # Double Chance
+    if "(1X)" in label or "1X" in label:
+        return "1X"
+    if "(X2)" in label or "X2" in label:
+        return "X2"
+    if "(12)" in label or "12" in label:
+        return "12"
+    # 1X2
+    if "(1)" in label:
+        return "1"
+    if "(2)" in label:
+        return "2"
+    if "(N)" in label or "Match Nul" in label:
+        return "N"
+    # Totals
+    if "Over 1.5" in label or "Plus de 1.5" in label:
+        return "+1.5 buts"
+    if "Under 1.5" in label or "Moins de 1.5" in label:
+        return "-1.5 buts"
+    if "Over 2.5" in label or "Plus de 2.5" in label:
+        return "+2.5 buts"
+    if "Under 2.5" in label or "Moins de 2.5" in label:
+        return "-2.5 buts"
+    if "Over 3.5" in label or "Plus de 3.5" in label:
+        return "+3.5 buts"
+    if "Under 3.5" in label or "Moins de 3.5" in label:
+        return "-3.5 buts"
+    return label
+
+
 def format_discord_embed(report: DailyReport) -> Dict[str, Any]:
-    """Formats a rich Discord Embed representing the 4 daily betting sections."""
+    """Formats a rich Discord Embed representing the daily betting sections."""
     date_display = report.timestamp.split()[0] if " " in report.timestamp else report.timestamp
 
     # Determine embed color: yellow if any section is in fallback mode, green if all validated
@@ -132,6 +164,26 @@ def format_discord_embed(report: DailyReport) -> Dict[str, Any]:
         fields.append({
             "name": f"COTE OSÉE {status_tag}",
             "value": "\n".join(lines),
+            "inline": False,
+        })
+
+    # -----------------------------------------------------------------
+    # Field 5 : Autres Opportunités Détectées (EV > 0)
+    # -----------------------------------------------------------------
+    valid_secondary = [
+        r for r in report.secondary_recommendations
+        if not r.is_fallback and r.ev_pct > 0
+    ]
+    if valid_secondary:
+        sec_lines = []
+        for sec in valid_secondary:
+            short_sel = format_compact_selection(sec.selection_label)
+            sec_lines.append(
+                f"• {sec.match_title} : {short_sel} @ {sec.winamax_odds:.2f} ({sec.ev_pct:+.1f}% EV)"
+            )
+        fields.append({
+            "name": "AUTRES OPPORTUNITÉS (EV > 0)",
+            "value": "\n".join(sec_lines),
             "inline": False,
         })
 

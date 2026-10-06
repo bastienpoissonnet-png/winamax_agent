@@ -170,6 +170,77 @@ class TestDiscordNotifier(unittest.TestCase):
         self.assertIn("cotes < 1.05 ou calendrier vide", motd_field["value"])
         self.assertIn("• Mise : 0.00 €", motd_field["value"])
 
+    def test_format_compact_selection(self):
+        from winamax_agent.reporting.discord_notifier import format_compact_selection
+        self.assertEqual(format_compact_selection("Nul ou Nice (X2)"), "X2")
+        self.assertEqual(format_compact_selection("Alavés ou Nul (1X)"), "1X")
+        self.assertEqual(format_compact_selection("Victoire Atl. Madrid (1)"), "1")
+        self.assertEqual(format_compact_selection("Victoire Liverpool (2)"), "2")
+        self.assertEqual(format_compact_selection("Match Nul (N)"), "N")
+        self.assertEqual(format_compact_selection("Plus de 2.5 buts (Over 2.5)"), "+2.5 buts")
+        self.assertEqual(format_compact_selection("Moins de 3.5 buts (Under 3.5)"), "-3.5 buts")
+
+    def test_format_discord_embed_with_secondary_opportunities(self):
+        sec1 = BetRecommendation(
+            competition="Ligue 1",
+            match_title="Lyon vs Nice",
+            kickoff="2026-10-07T21:00:00Z",
+            market_name="Double Chance",
+            selection_label="Nul ou Nice (X2)",
+            bookmaker="Winamax",
+            winamax_odds=1.99,
+            raw_implied_prob_pct=50.2,
+            fair_bookmaker_prob_pct=48.0,
+            model_true_prob_pct=52.0,
+            edge_pct=4.0,
+            ev_pct=3.3,
+            stake_eur=10.0,
+            stake_details="Palier 2",
+            point_1_xg="xG",
+            point_2_h2h_tactics="H2H",
+            point_3_context_form="Form",
+            is_fallback=False,
+        )
+        sec2 = BetRecommendation(
+            competition="La Liga",
+            match_title="Alavés vs Atl. Madrid",
+            kickoff="2026-10-07T19:00:00Z",
+            market_name="Double Chance",
+            selection_label="Alavés ou Nul (1X)",
+            bookmaker="Winamax",
+            winamax_odds=2.02,
+            raw_implied_prob_pct=49.5,
+            fair_bookmaker_prob_pct=47.0,
+            model_true_prob_pct=51.0,
+            edge_pct=4.0,
+            ev_pct=1.7,
+            stake_eur=10.0,
+            stake_details="Palier 2",
+            point_1_xg="xG",
+            point_2_h2h_tactics="H2H",
+            point_3_context_form="Form",
+            is_fallback=False,
+        )
+        report_with_sec = DailyReport(
+            timestamp="2026-10-06 12:00:00",
+            total_matches_analyzed=8,
+            total_markets_analyzed=86,
+            positive_ev_count=12,
+            match_of_the_day=self.sample_rec,
+            top_recommendation=self.sample_rec,
+            secondary_recommendations=[sec1, sec2],
+            top_parlay=self.sample_parlay,
+            longshot_recommendation=self.sample_rec,
+        )
+        payload = format_discord_embed(report_with_sec)
+        embed = payload["embeds"][0]
+        self.assertEqual(len(embed["fields"]), 5)
+
+        sec_field = embed["fields"][4]
+        self.assertEqual(sec_field["name"], "AUTRES OPPORTUNITÉS (EV > 0)")
+        self.assertIn("• Lyon vs Nice : X2 @ 1.99 (+3.3% EV)", sec_field["value"])
+        self.assertIn("• Alavés vs Atl. Madrid : 1X @ 2.02 (+1.7% EV)", sec_field["value"])
+
     def test_send_discord_report_empty_url(self):
         # Empty or placeholder URL returns False without making network request
         self.assertFalse(send_discord_report(self.sample_report, webhook_url=""))

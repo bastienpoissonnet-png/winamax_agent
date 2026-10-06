@@ -175,6 +175,12 @@ class TestAgentIntegration(unittest.TestCase):
             self.assertGreaterEqual(report.longshot_recommendation.winamax_odds, 4.00)
             self.assertLessEqual(report.longshot_recommendation.winamax_odds, 10.00)
 
+        # Verify all secondary recommendations are within [1.05, 10.00] and have EV > 0
+        for sec in report.secondary_recommendations:
+            self.assertGreaterEqual(sec.winamax_odds, 1.05)
+            self.assertLessEqual(sec.winamax_odds, 10.00)
+            self.assertGreater(sec.ev_pct, 0.0)
+
         # 3. If absolute_min_odds is set very high (e.g. 10.00), no match of the day is playable
         high_floor_config = AgentConfig(
             odds_api_key="",
