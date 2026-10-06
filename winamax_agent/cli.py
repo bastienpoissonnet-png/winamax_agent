@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from winamax_agent.agent import WinamaxBettingAgent
 from winamax_agent.config import AgentConfig
+from winamax_agent.reporting.discord_notifier import send_discord_report
 from winamax_agent.reporting.exporters import export_to_json, export_to_markdown
 from winamax_agent.scheduler import AgentScheduler
 
@@ -71,6 +72,12 @@ def parse_args() -> argparse.Namespace:
         help="Chemin vers le fichier de variables d'environnement",
     )
     parser.add_argument(
+        "--discord-webhook",
+        type=str,
+        default=None,
+        help="URL du webhook Discord pour notification immédiate (écrase la valeur .env)",
+    )
+    parser.add_argument(
         "-v", "--verbose",
         action="store_true",
         help="Active les logs détaillés en mode DEBUG",
@@ -107,6 +114,8 @@ def main() -> None:
         config.output_dir = Path(args.output_dir)
     if args.interval_hours is not None:
         config.schedule_interval_hours = args.interval_hours
+    if args.discord_webhook:
+        config.discord_webhook_url = args.discord_webhook.strip()
 
     # Initialize agent
     agent = WinamaxBettingAgent(config=config)
@@ -132,6 +141,15 @@ def main() -> None:
         export_to_json(report, latest_json)
         print(f"📁 Rapports sauvegardés : {latest_md} et {latest_json}\n")
 
+        # Discord notification
+        if config.discord_webhook_url:
+            discord_success = send_discord_report(report, webhook_url=config.discord_webhook_url)
+            if discord_success:
+                print("📲 Notification Discord transmise avec succès sur votre salon !\n")
+            else:
+                print("⚠️ Impossible de transmettre la notification Discord (vérifiez le webhook).\n")
+
 
 if __name__ == "__main__":
     main()
+

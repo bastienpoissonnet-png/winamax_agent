@@ -1,0 +1,338 @@
+{
+  "timestamp": 1791278286.5171814,
+  "teams": {
+    "Paris Saint-Germain": {
+      "team_name": "Paris Saint-Germain",
+      "league": "Ligue 1",
+      "matches_played": 24,
+      "xg_for_per_match": 2.32,
+      "xg_against_per_match": 0.82,
+      "xg_diff_per_match": 1.5,
+      "source": "understat_calibrated"
+    },
+    "Olympique de Marseille": {
+      "team_name": "Olympique de Marseille",
+      "league": "Ligue 1",
+      "matches_played": 24,
+      "xg_for_per_match": 1.84,
+      "xg_against_per_match": 1.12,
+      "xg_diff_per_match": 0.72,
+      "source": "understat_calibrated"
+    },
+    "AS Monaco": {
+      "team_name": "AS Monaco",
+      "league": "Ligue 1",
+      "matches_played": 24,
+      "xg_for_per_match": 1.96,
+      "xg_against_per_match": 1.08,
+      "xg_diff_per_match": 0.88,
+      "source": "understat_calibrated"
+    },
+    "LOSC Lille": {
+      "team_name": "LOSC Lille",
+      "league": "Ligue 1",
+      "matches_played": 24,
+      "xg_for_per_match": 1.58,
+      "xg_against_per_match": 0.94,
+      "xg_diff_per_match": 0.64,
+      "source": "understat_calibrated"
+    },
+    "Olympique Lyonnais": {
+      "team_name": "Olympique Lyonnais",
+      "league": "Ligue 1",
+      "matches_played": 24,
+      "xg_for_per_match": 1.62,
+      "xg_against_per_match": 1.34,
+      "xg_diff_per_match": 0.28,
+      "source": "understat_calibrated"
+    },
+    "RC Lens": {
+      "team_name": "RC Lens",
+      "league": "Ligue 1",
+      "matches_played": 24,
+      "xg_for_per_match": 1.42,
+      "xg_against_per_match": 0.88,
+      "xg_diff_per_match": 0.54,
+      "source": "understat_calibrated"
+    },
+    "OGC Nice": {
+      "team_name": "OGC Nice",
+      "league": "Ligue 1",
+      "matches_played": 24,
+      "xg_for_per_match": 1.36,
+      "xg_against_per_match": 0.9,
+      "xg_diff_per_match": 0.46,
+      "source": "understat_calibrated"
+    },
+    "Stade Rennais": {
+      "team_name": "Stade Rennais",
+      "league": "Ligue 1",
+      "matches_played": 24,
+      "xg_for_per_match": 1.46,
+      "xg_against_per_match": 1.28,
+      "xg_diff_per_match": 0.18,
+      "source": "understat_calibrated"
+    },
+    "Stade Brestois 29": {
+      "team_name": "Stade Brestois 29",
+      "league": "Ligue 1",
+      "matches_played": 24,
+      "xg_for_per_match": 1.38,
+      "xg_against_per_match": 1.22,
+      "xg_diff_per_match": 0.16,
+      "source": "understat_calibrated"
+    },
+    "RC Strasbourg": {
+      "team_name": "RC Strasbourg",
+      "league": "Ligue 1",
+      "matches_played": 24,
+      "xg_for_per_match": 1.32,
+      "xg_against_per_match": 1.54,
+      "xg_diff_per_match": -0.22,
+      "source": "understat_calibrated"
+    },
+    "Toulouse FC": {
+      "team_name": "Toulouse FC",
+      "league": "Ligue 1",
+      "matches_played": 24,
+      "xg_for_per_match": 1.25,
+      "xg_against_per_match": 1.35,
+      "xg_diff_per_match": -0.1,
+      "source": "understat_calibrated"
+    },
+    "Stade de Reims": {
+      "team_name": "Stade de Reims",
+      "league": "Ligue 1",
+      "matches_played": 24,
+      "xg_for_per_match": 1.22,
+      "xg_against_per_match": 1.4,
+      "xg_diff_per_match": -0.18,
+      "source": "understat_calibrated"
+    },
+    "Montpellier HSC": {
+      "team_name": "Montpellier HSC",
+      "league": "Ligue 1",
+      "matches_played": 24,
+      "xg_for_per_match": 1.15,
+      "xg_against_per_match": 1.85,
+      "xg_diff_per_match": -0.7,
+      "source": "understat_calibrated"
+    },
+    "FC Nantes": {
+      "team_name": "FC Nantes",
+      "league": "Ligue 1",
+      "matches_played": 24,
+      "xg_for_per_match": 1.1,
+      "xg_against_per_match": 1.45,
+      "xg_diff_per_match": -0.35,
+      "source": "understat_calibrated"
+    },
+    "Arsenal": {
+      "team_name": "Arsenal",
+      "league": "Premier League",
+      "matches_played": 26,
+      "xg_for_per_match": 2.08,
+      "xg_against_per_match": 0.72,
+      "xg_diff_per_match": 1.36,
+      "source": "understat_calibrated"
+    },
+    "Liverpool": {
+      "team_name": "Liverpool",
+      "league": "Premier League",
+      "matches_played": 26,
+      "xg_for_per_match": 2.18,
+      "xg_against_per_match": 0.85,
+      "xg_diff_per_match": 1.33,
+      "source": "understat_calibrated"
+    },
+    "Manchester City": {
+      "team_name": "Manchester City",
+      "league": "Premier League",
+      "matches_played": 26,
+      "xg_for_per_match": 2.28,
+      "xg_against_per_match": 0.88,
+      "xg_diff_per_match": 1.4,
+      "source": "understat_calibrated"
+    },
+    "Chelsea": {
+      "team_name": "Chelsea",
+      "league": "Premier League",
+      "matches_played": 26,
+      "xg_for_per_match": 1.92,
+      "xg_against_per_match": 1.25,
+      "xg_diff_per_match": 0.67,
+      "source": "understat_calibrated"
+    },
+    "Aston Villa": {
+      "team_name": "Aston Villa",
+      "league": "Premier League",
+      "matches_played": 26,
+      "xg_for_per_match": 1.72,
+      "xg_against_per_match": 1.22,
+      "xg_diff_per_match": 0.5,
+      "source": "understat_calibrated"
+    },
+    "Tottenham Hotspur": {
+      "team_name": "Tottenham Hotspur",
+      "league": "Premier League",
+      "matches_played": 26,
+      "xg_for_per_match": 1.86,
+      "xg_against_per_match": 1.42,
+      "xg_diff_per_match": 0.44,
+      "source": "understat_calibrated"
+    },
+    "Newcastle United": {
+      "team_name": "Newcastle United",
+      "league": "Premier League",
+      "matches_played": 26,
+      "xg_for_per_match": 1.58,
+      "xg_against_per_match": 1.28,
+      "xg_diff_per_match": 0.3,
+      "source": "understat_calibrated"
+    },
+    "Brighton & Hove Albion": {
+      "team_name": "Brighton & Hove Albion",
+      "league": "Premier League",
+      "matches_played": 26,
+      "xg_for_per_match": 1.64,
+      "xg_against_per_match": 1.38,
+      "xg_diff_per_match": 0.26,
+      "source": "understat_calibrated"
+    },
+    "Manchester United": {
+      "team_name": "Manchester United",
+      "league": "Premier League",
+      "matches_played": 26,
+      "xg_for_per_match": 1.5,
+      "xg_against_per_match": 1.45,
+      "xg_diff_per_match": 0.05,
+      "source": "understat_calibrated"
+    },
+    "Fulham": {
+      "team_name": "Fulham",
+      "league": "Premier League",
+      "matches_played": 26,
+      "xg_for_per_match": 1.42,
+      "xg_against_per_match": 1.32,
+      "xg_diff_per_match": 0.1,
+      "source": "understat_calibrated"
+    },
+    "Brentford": {
+      "team_name": "Brentford",
+      "league": "Premier League",
+      "matches_played": 26,
+      "xg_for_per_match": 1.48,
+      "xg_against_per_match": 1.55,
+      "xg_diff_per_match": -0.07,
+      "source": "understat_calibrated"
+    },
+    "West Ham United": {
+      "team_name": "West Ham United",
+      "league": "Premier League",
+      "matches_played": 26,
+      "xg_for_per_match": 1.35,
+      "xg_against_per_match": 1.65,
+      "xg_diff_per_match": -0.3,
+      "source": "understat_calibrated"
+    },
+    "Bournemouth": {
+      "team_name": "Bournemouth",
+      "league": "Premier League",
+      "matches_played": 26,
+      "xg_for_per_match": 1.52,
+      "xg_against_per_match": 1.4,
+      "xg_diff_per_match": 0.12,
+      "source": "understat_calibrated"
+    },
+    "Real Madrid": {
+      "team_name": "Real Madrid",
+      "league": "La Liga",
+      "matches_played": 25,
+      "xg_for_per_match": 2.22,
+      "xg_against_per_match": 0.92,
+      "xg_diff_per_match": 1.3,
+      "source": "understat_calibrated"
+    },
+    "FC Barcelone": {
+      "team_name": "FC Barcelone",
+      "league": "La Liga",
+      "matches_played": 25,
+      "xg_for_per_match": 2.38,
+      "xg_against_per_match": 1.02,
+      "xg_diff_per_match": 1.36,
+      "source": "understat_calibrated"
+    },
+    "Bayern Munich": {
+      "team_name": "Bayern Munich",
+      "league": "Bundesliga",
+      "matches_played": 24,
+      "xg_for_per_match": 2.48,
+      "xg_against_per_match": 0.86,
+      "xg_diff_per_match": 1.62,
+      "source": "understat_calibrated"
+    },
+    "Inter Milan": {
+      "team_name": "Inter Milan",
+      "league": "Serie A",
+      "matches_played": 25,
+      "xg_for_per_match": 1.98,
+      "xg_against_per_match": 0.78,
+      "xg_diff_per_match": 1.2,
+      "source": "understat_calibrated"
+    },
+    "Bayer Leverkusen": {
+      "team_name": "Bayer Leverkusen",
+      "league": "Bundesliga",
+      "matches_played": 24,
+      "xg_for_per_match": 2.12,
+      "xg_against_per_match": 1.05,
+      "xg_diff_per_match": 1.07,
+      "source": "understat_calibrated"
+    },
+    "Borussia Dortmund": {
+      "team_name": "Borussia Dortmund",
+      "league": "Bundesliga",
+      "matches_played": 24,
+      "xg_for_per_match": 1.85,
+      "xg_against_per_match": 1.25,
+      "xg_diff_per_match": 0.6,
+      "source": "understat_calibrated"
+    },
+    "Atlético Madrid": {
+      "team_name": "Atlético Madrid",
+      "league": "La Liga",
+      "matches_played": 25,
+      "xg_for_per_match": 1.76,
+      "xg_against_per_match": 0.84,
+      "xg_diff_per_match": 0.92,
+      "source": "understat_calibrated"
+    },
+    "Juventus": {
+      "team_name": "Juventus",
+      "league": "Serie A",
+      "matches_played": 25,
+      "xg_for_per_match": 1.62,
+      "xg_against_per_match": 0.75,
+      "xg_diff_per_match": 0.87,
+      "source": "understat_calibrated"
+    },
+    "AC Milan": {
+      "team_name": "AC Milan",
+      "league": "Serie A",
+      "matches_played": 25,
+      "xg_for_per_match": 1.74,
+      "xg_against_per_match": 1.15,
+      "xg_diff_per_match": 0.59,
+      "source": "understat_calibrated"
+    },
+    "Atalanta": {
+      "team_name": "Atalanta",
+      "league": "Serie A",
+      "matches_played": 25,
+      "xg_for_per_match": 1.95,
+      "xg_against_per_match": 1.1,
+      "xg_diff_per_match": 0.85,
+      "source": "understat_calibrated"
+    }
+  }
+}

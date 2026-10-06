@@ -20,3 +20,4 @@ dev = [
 
 [project.scripts]
 winamax-agent = "winamax_agent.cli:main"
+

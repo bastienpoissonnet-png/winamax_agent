@@ -12,9 +12,9 @@ class ValueOpportunity:
     match_title: str
     home_team: str
     away_team: str
-    market_type: str             # "1X2" or "Over/Under 2.5"
-    selection: str               # "Victoire Paris SG", "Match Nul", "Plus de 2.5 buts", etc.
-    selection_key: str           # "home", "draw", "away", "over_2.5", "under_2.5"
+    market_type: str             # "Double Chance", "Total Buts (Plus/Moins)", "1X2"
+    selection: str               # "Victoire Paris SG ou Nul (1X)", "Plus de 1.5 buts", etc.
+    selection_key: str           # "1x", "x2", "over_1.5", "under_3.5", "home", etc.
     odds: float                  # Cote Winamax
     raw_implied_prob: float      # 1 / Cote (avec marge)
     fair_bookmaker_prob: float   # Probabilité implicite Winamax sans marge
@@ -23,6 +23,8 @@ class ValueOpportunity:
     ev: float                    # (model_true_prob * odds) - 1.0 (Expected Value en %)
     recommended_stake: float = 0.0  # Mise recommandée calculée par le critère de Kelly (€)
     is_value: bool = False
+    rejection_reason: str = ""
+    is_solid_market: bool = False   # True pour Double Chance ou totaux sécurisés
 
     @property
     def ev_pct(self) -> float:
@@ -45,20 +47,45 @@ def evaluate_bet(
     winamax_odds: float,
     fair_bookmaker_prob: float,
     model_true_prob: float,
-    min_ev_threshold: float = 0.0,
+    min_ev_threshold: float = 0.005,
+    min_odds: float = 1.50,
+    max_odds: float = 3.00,
+    min_prob_threshold: float = 0.40,
+    min_prob_low_odds: float = 0.60,
 ) -> ValueOpportunity:
-    """Evaluates whether an outcome is a Value Bet with positive Expected Value.
+    """Evaluates whether an outcome is a Solid Value Bet meeting strict risk filters.
 
-    Expected Value Formula:
-        EV = (P_true * Odds) - 1.0
-        EV > 0 signifies a mathematically profitable long-term expectation.
+    Criteria for Solid Value:
+        1. Expected Value EV > min_ev_threshold (+0.5%)
+        2. Odds strictly within [min_odds, max_odds] (e.g. 1.50 to 3.00)
+        3. Model true probability >= min_prob_threshold (40%)
+        4. If odds < 1.70, model true probability >= min_prob_low_odds (60%)
     """
     raw_implied = 1.0 / winamax_odds if winamax_odds > 0 else 0.0
     ev = (model_true_prob * winamax_odds) - 1.0
     edge = model_true_prob - fair_bookmaker_prob
-    is_value = ev > min_ev_threshold
-
     match_title = f"{home_team} vs {away_team}"
+
+    is_solid_market = selection_key in ("1x", "x2", "over_1.5", "under_3.5", "under_2.5", "over_2.5")
+
+    rejection = ""
+    is_value = True
+
+    if ev <= min_ev_threshold:
+        is_value = False
+        rejection = f"EV non positive ({ev*100:.1f}% <= {min_ev_threshold*100:.1f}%)"
+    elif winamax_odds < min_odds:
+        is_value = False
+        rejection = f"Cote trop basse ({winamax_odds:.2f} < {min_odds:.2f})"
+    elif winamax_odds > max_odds:
+        is_value = False
+        rejection = f"Cote trop élevée ({winamax_odds:.2f} > {max_odds:.2f})"
+    elif model_true_prob < min_prob_threshold:
+        is_value = False
+        rejection = f"Probabilité trop faible ({model_true_prob*100:.1f}% < {min_prob_threshold*100:.0f}%)"
+    elif winamax_odds < 1.60 and model_true_prob < min_prob_low_odds:
+        is_value = False
+        rejection = f"Probabilité insuffisante pour cote < 1.60 ({model_true_prob*100:.1f}% < {min_prob_low_odds*100:.0f}%)"
 
     return ValueOpportunity(
         competition=competition,
@@ -75,4 +102,6 @@ def evaluate_bet(
         edge=edge,
         ev=ev,
         is_value=is_value,
+        rejection_reason=rejection,
+        is_solid_market=is_solid_market,
     )

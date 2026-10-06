@@ -22,6 +22,13 @@ class TeamMetrics:
     recent_form_points: float     # Points in last 5 matches (0 to 15)
     key_absences_impact: float = 0.0  # Percentage penalty on strength (-0.15 to 0.0)
     fatigue_index: float = 0.0    # 0.0 (rested) to 1.0 (midweek European travel)
+    is_calibrated: bool = True    # True if team has real verified xG data, False if uncalibrated
+    streak_l5: str = ""           # Série récente réelle (ex: "V-V-N-V-V")
+    goals_for_l5: int = 0         # Buts réels marqués sur les 5 derniers matchs
+    goals_against_l5: int = 0     # Buts réels concédés sur les 5 derniers matchs
+    matches_played: int = 0       # Matchs réels joués
+    league: str = ""              # Championnat
+    data_source: str = "understat_live"
 
 
 @dataclass
@@ -34,8 +41,15 @@ class MatchProbabilities:
     prob_home_win: float          # P(Home Win)
     prob_draw: float              # P(Draw)
     prob_away_win: float          # P(Away Win)
+    prob_double_chance_1x: float  # P(Home or Draw)
+    prob_double_chance_x2: float  # P(Draw or Away)
+    prob_double_chance_12: float  # P(Home or Away)
+    prob_over_1_5: float          # P(Total goals > 1.5)
+    prob_under_1_5: float         # P(Total goals < 1.5)
     prob_over_2_5: float          # P(Total goals > 2.5)
     prob_under_2_5: float         # P(Total goals < 2.5)
+    prob_over_3_5: float          # P(Total goals > 3.5)
+    prob_under_3_5: float         # P(Total goals < 3.5)
     prob_btts_yes: float          # P(Both Teams To Score - Yes)
     prob_btts_no: float           # P(Both Teams To Score - No)
     score_matrix: Dict[Tuple[int, int], float] = field(default_factory=dict)
@@ -46,8 +60,15 @@ class MatchProbabilities:
             "home": self.prob_home_win,
             "draw": self.prob_draw,
             "away": self.prob_away_win,
+            "1x": self.prob_double_chance_1x,
+            "x2": self.prob_double_chance_x2,
+            "12": self.prob_double_chance_12,
+            "over_1.5": self.prob_over_1_5,
+            "under_1.5": self.prob_under_1_5,
             "over_2.5": self.prob_over_2_5,
             "under_2.5": self.prob_under_2_5,
+            "over_3.5": self.prob_over_3_5,
+            "under_3.5": self.prob_under_3_5,
             "btts_yes": self.prob_btts_yes,
             "btts_no": self.prob_btts_no,
         }
@@ -153,8 +174,18 @@ class XgPoissonEngine:
         p_draw = sum(p for (x, y), p in score_matrix.items() if x == y)
         p_away_win = sum(p for (x, y), p in score_matrix.items() if x < y)
 
+        p_double_chance_1x = p_home_win + p_draw
+        p_double_chance_x2 = p_draw + p_away_win
+        p_double_chance_12 = p_home_win + p_away_win
+
+        p_over_1_5 = sum(p for (x, y), p in score_matrix.items() if x + y > 1)
+        p_under_1_5 = sum(p for (x, y), p in score_matrix.items() if x + y <= 1)
+
         p_over_2_5 = sum(p for (x, y), p in score_matrix.items() if x + y > 2)
         p_under_2_5 = sum(p for (x, y), p in score_matrix.items() if x + y <= 2)
+
+        p_over_3_5 = sum(p for (x, y), p in score_matrix.items() if x + y > 3)
+        p_under_3_5 = sum(p for (x, y), p in score_matrix.items() if x + y <= 3)
 
         p_btts_yes = sum(p for (x, y), p in score_matrix.items() if x > 0 and y > 0)
         p_btts_no = 1.0 - p_btts_yes
@@ -167,9 +198,17 @@ class XgPoissonEngine:
             prob_home_win=p_home_win,
             prob_draw=p_draw,
             prob_away_win=p_away_win,
+            prob_double_chance_1x=p_double_chance_1x,
+            prob_double_chance_x2=p_double_chance_x2,
+            prob_double_chance_12=p_double_chance_12,
+            prob_over_1_5=p_over_1_5,
+            prob_under_1_5=p_under_1_5,
             prob_over_2_5=p_over_2_5,
             prob_under_2_5=p_under_2_5,
+            prob_over_3_5=p_over_3_5,
+            prob_under_3_5=p_under_3_5,
             prob_btts_yes=p_btts_yes,
             prob_btts_no=p_btts_no,
             score_matrix=score_matrix,
         )
+

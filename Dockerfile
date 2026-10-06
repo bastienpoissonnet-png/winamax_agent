@@ -14,3 +14,4 @@ COPY . .
 # Run scheduled agent every 6 hours by default
 ENTRYPOINT ["python3", "-m", "winamax_agent.cli"]
 CMD ["--schedule", "--interval-hours", "6"]
+

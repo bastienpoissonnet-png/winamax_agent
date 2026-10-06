@@ -104,9 +104,14 @@ class TheOddsApiClient:
         fixtures: List[MatchFixture] = []
 
         comp_name_map = {
+            "soccer_uefa_nations_league": "UEFA Nations League",
             "soccer_france_ligue_one": "Ligue 1 McDonald's",
             "soccer_epl": "Premier League",
+            "soccer_spain_la_liga": "La Liga",
+            "soccer_italy_serie_a": "Serie A",
+            "soccer_germany_bundesliga": "Bundesliga",
             "soccer_uefa_champs_league": "UEFA Champions League",
+            "soccer_uefa_europa_league": "UEFA Europa League",
         }
         comp_title = comp_name_map.get(sport_key, sport_key)
 
@@ -187,3 +192,4 @@ class TheOddsApiClient:
                 )
 
         return fixtures
+

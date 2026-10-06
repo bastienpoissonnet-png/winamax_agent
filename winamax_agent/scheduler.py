@@ -45,6 +45,11 @@ class AgentScheduler:
             export_to_json(report, latest_json)
 
             logger.info(f"Reports saved to {md_path} and {latest_md}")
+
+            # Discord notification if configured
+            if self.agent.config.discord_webhook_url:
+                from winamax_agent.reporting.discord_notifier import send_discord_report
+                send_discord_report(report, webhook_url=self.agent.config.discord_webhook_url)
         except Exception as e:
             logger.error(f"Error during analysis cycle: {e}", exc_info=True)
 
@@ -77,3 +82,4 @@ class AgentScheduler:
                 chunk = min(5, sleep_remaining)
                 time.sleep(chunk)
                 sleep_remaining -= chunk
+

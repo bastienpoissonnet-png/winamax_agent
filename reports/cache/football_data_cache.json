@@ -1,0 +1,255 @@
+{
+  "timestamp": 1791278309.0388672,
+  "teams": {
+    "Paris Saint-Germain": {
+      "team_name": "Paris Saint-Germain",
+      "matches_played": 5,
+      "points_l5": 13,
+      "goals_for_l5": 14,
+      "goals_against_l5": 4,
+      "streak_l5": "V-V-N-V-V",
+      "form_rating": 0.867,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Olympique de Marseille": {
+      "team_name": "Olympique de Marseille",
+      "matches_played": 5,
+      "points_l5": 10,
+      "goals_for_l5": 11,
+      "goals_against_l5": 6,
+      "streak_l5": "V-D-V-N-V",
+      "form_rating": 0.667,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "AS Monaco": {
+      "team_name": "AS Monaco",
+      "matches_played": 5,
+      "points_l5": 11,
+      "goals_for_l5": 10,
+      "goals_against_l5": 5,
+      "streak_l5": "V-V-N-N-V",
+      "form_rating": 0.733,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "LOSC Lille": {
+      "team_name": "LOSC Lille",
+      "matches_played": 5,
+      "points_l5": 9,
+      "goals_for_l5": 7,
+      "goals_against_l5": 4,
+      "streak_l5": "N-V-N-V-D",
+      "form_rating": 0.6,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Olympique Lyonnais": {
+      "team_name": "Olympique Lyonnais",
+      "matches_played": 5,
+      "points_l5": 8,
+      "goals_for_l5": 9,
+      "goals_against_l5": 8,
+      "streak_l5": "V-D-N-V-D",
+      "form_rating": 0.533,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "RC Lens": {
+      "team_name": "RC Lens",
+      "matches_played": 5,
+      "points_l5": 8,
+      "goals_for_l5": 6,
+      "goals_against_l5": 4,
+      "streak_l5": "N-N-V-N-D",
+      "form_rating": 0.533,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "OGC Nice": {
+      "team_name": "OGC Nice",
+      "matches_played": 5,
+      "points_l5": 7,
+      "goals_for_l5": 6,
+      "goals_against_l5": 5,
+      "streak_l5": "D-V-N-N-D",
+      "form_rating": 0.467,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Stade Rennais": {
+      "team_name": "Stade Rennais",
+      "matches_played": 5,
+      "points_l5": 6,
+      "goals_for_l5": 7,
+      "goals_against_l5": 8,
+      "streak_l5": "D-N-D-V-D",
+      "form_rating": 0.4,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Stade Brestois 29": {
+      "team_name": "Stade Brestois 29",
+      "matches_played": 5,
+      "points_l5": 7,
+      "goals_for_l5": 6,
+      "goals_against_l5": 7,
+      "streak_l5": "V-D-N-D-N",
+      "form_rating": 0.467,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "RC Strasbourg": {
+      "team_name": "RC Strasbourg",
+      "matches_played": 5,
+      "points_l5": 5,
+      "goals_for_l5": 6,
+      "goals_against_l5": 9,
+      "streak_l5": "D-D-N-V-D",
+      "form_rating": 0.333,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Arsenal": {
+      "team_name": "Arsenal",
+      "matches_played": 5,
+      "points_l5": 13,
+      "goals_for_l5": 12,
+      "goals_against_l5": 3,
+      "streak_l5": "V-V-N-V-V",
+      "form_rating": 0.867,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Liverpool": {
+      "team_name": "Liverpool",
+      "matches_played": 5,
+      "points_l5": 13,
+      "goals_for_l5": 11,
+      "goals_against_l5": 4,
+      "streak_l5": "V-V-V-D-V",
+      "form_rating": 0.867,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Manchester City": {
+      "team_name": "Manchester City",
+      "matches_played": 5,
+      "points_l5": 12,
+      "goals_for_l5": 13,
+      "goals_against_l5": 5,
+      "streak_l5": "V-N-V-N-V",
+      "form_rating": 0.8,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Chelsea": {
+      "team_name": "Chelsea",
+      "matches_played": 5,
+      "points_l5": 10,
+      "goals_for_l5": 10,
+      "goals_against_l5": 7,
+      "streak_l5": "V-V-N-D-V",
+      "form_rating": 0.667,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Aston Villa": {
+      "team_name": "Aston Villa",
+      "matches_played": 5,
+      "points_l5": 9,
+      "goals_for_l5": 8,
+      "goals_against_l5": 6,
+      "streak_l5": "N-V-D-V-N",
+      "form_rating": 0.6,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Tottenham Hotspur": {
+      "team_name": "Tottenham Hotspur",
+      "matches_played": 5,
+      "points_l5": 8,
+      "goals_for_l5": 10,
+      "goals_against_l5": 8,
+      "streak_l5": "D-V-D-V-N",
+      "form_rating": 0.533,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Newcastle United": {
+      "team_name": "Newcastle United",
+      "matches_played": 5,
+      "points_l5": 7,
+      "goals_for_l5": 7,
+      "goals_against_l5": 7,
+      "streak_l5": "D-N-V-D-N",
+      "form_rating": 0.467,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Brighton & Hove Albion": {
+      "team_name": "Brighton & Hove Albion",
+      "matches_played": 5,
+      "points_l5": 8,
+      "goals_for_l5": 8,
+      "goals_against_l5": 8,
+      "streak_l5": "N-D-V-N-N",
+      "form_rating": 0.533,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Manchester United": {
+      "team_name": "Manchester United",
+      "matches_played": 5,
+      "points_l5": 7,
+      "goals_for_l5": 6,
+      "goals_against_l5": 7,
+      "streak_l5": "D-N-D-V-N",
+      "form_rating": 0.467,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Real Madrid": {
+      "team_name": "Real Madrid",
+      "matches_played": 5,
+      "points_l5": 12,
+      "goals_for_l5": 11,
+      "goals_against_l5": 4,
+      "streak_l5": "V-V-N-V-N",
+      "form_rating": 0.8,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "FC Barcelone": {
+      "team_name": "FC Barcelone",
+      "matches_played": 5,
+      "points_l5": 12,
+      "goals_for_l5": 14,
+      "goals_against_l5": 5,
+      "streak_l5": "V-V-D-V-V",
+      "form_rating": 0.8,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Bayern Munich": {
+      "team_name": "Bayern Munich",
+      "matches_played": 5,
+      "points_l5": 13,
+      "goals_for_l5": 16,
+      "goals_against_l5": 4,
+      "streak_l5": "V-V-V-N-V",
+      "form_rating": 0.867,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Inter Milan": {
+      "team_name": "Inter Milan",
+      "matches_played": 5,
+      "points_l5": 11,
+      "goals_for_l5": 9,
+      "goals_against_l5": 3,
+      "streak_l5": "V-N-V-V-D",
+      "form_rating": 0.733,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Bayer Leverkusen": {
+      "team_name": "Bayer Leverkusen",
+      "matches_played": 5,
+      "points_l5": 10,
+      "goals_for_l5": 11,
+      "goals_against_l5": 6,
+      "streak_l5": "V-N-N-V-D",
+      "form_rating": 0.667,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    },
+    "Borussia Dortmund": {
+      "team_name": "Borussia Dortmund",
+      "matches_played": 5,
+      "points_l5": 9,
+      "goals_for_l5": 9,
+      "goals_against_l5": 7,
+      "streak_l5": "D-V-N-V-D",
+      "form_rating": 0.6,
+      "last_match_date": "2026-10-04T20:00:00Z"
+    }
+  }
+}

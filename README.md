@@ -45,31 +45,41 @@ $$\text{Mise brute} = f_{\text{Demi-Kelly}} \times \text{Bankroll}$$
 
 ```text
 winamax_agent/
-├── pyproject.toml              # Configuration du package
-├── requirements.txt            # Dépendances Python
-├── .env.example                # Modèle des variables d'environnement
-├── Dockerfile                  # Conteneur pour exécution en production
-├── winamax-agent.service       # Service systemd pour serveur Linux/VPS
+├── .github/
+│   └── workflows/
+│       └── daily_bet.yml           # Workflow GitHub Actions (10h00 UTC quotidien + Discord)
+├── pyproject.toml                  # Configuration du package
+├── requirements.txt                # Dépendances Python
+├── .env.example                    # Modèle des variables d'environnement
+├── Dockerfile                      # Conteneur pour exécution en production
+├── winamax-agent.service           # Service systemd pour serveur Linux/VPS
 ├── winamax_agent/
-│   ├── config.py               # Gestionnaire de configuration (.env / CLI)
-│   ├── agent.py                # Orchestrateur central du pipeline quantitatif
-│   ├── scheduler.py            # Planificateur périodique (boucle d'exécution)
-│   ├── cli.py                  # Interface en ligne de commande
+│   ├── config.py                   # Gestionnaire de configuration (.env / CLI)
+│   ├── agent.py                    # Orchestrateur central du pipeline quantitatif
+│   ├── scheduler.py                # Planificateur périodique (boucle d'exécution)
+│   ├── cli.py                      # Interface en ligne de commande
 │   ├── ingestion/
-│   │   ├── odds_client.py      # Client The Odds API (Winamax / EU)
-│   │   ├── stats_provider.py   # Métriques xG, forme et justifications analytiques
-│   │   └── mock_data.py        # Fixtures et cotes Winamax de simulation / hors-ligne
+│   │   ├── odds_client.py          # Client The Odds API (Winamax / EU)
+│   │   ├── fotmob_client.py        # Client FotMob (stats sans clé API & sélections nationales)
+│   │   ├── football_data_client.py # Client Football-Data.org (forme récente & résultats)
+│   │   ├── understat_client.py     # Scraper/extracteur Understat (xG/xGA réels par match)
+│   │   ├── name_normalizer.py      # Normalisation canonique des clubs inter-sources
+│   │   ├── stats_provider.py       # Agrégateur dynamique xG/forme & justifications
+│   │   └── mock_data.py            # Fixtures et cotes Winamax de simulation / hors-ligne
 │   ├── models/
-│   │   ├── margin.py           # Calcul d'overround et retrait de marge
-│   │   ├── poisson_xg.py       # Moteur Dixon-Coles / Poisson bivarié
-│   │   └── value_bet.py        # Évaluation du Value Bet (Edge, EV)
+│   │   ├── margin.py               # Calcul d'overround et retrait de marge
+│   │   ├── poisson_xg.py           # Moteur Dixon-Coles / Poisson bivarié
+│   │   ├── value_bet.py            # Évaluation du Value Bet (Edge, EV)
+│   │   └── parlays.py              # Générateur de combinés intelligents & de secours
 │   ├── staking/
-│   │   └── kelly.py            # Kelly fractionnaire 50%, plancher 1€ et plafond 20€
+│   │   └── kelly.py                # Kelly fractionnaire, Micro-Kelly & mise de secours
 │   └── reporting/
-│       ├── reporter.py         # Formateur console et structure du rapport
-│       └── exporters.py        # Exporteurs Markdown et JSON
-├── reports/                    # Dossier de sauvegarde des rapports quotidiens
-└── tests/                      # Suite de tests unitaires et d'intégration
+│       ├── reporter.py             # Formateur console et structure du rapport (4 blocs)
+│       ├── discord_notifier.py     # Formateur d'Embed et expéditeur Webhook Discord
+│       └── exporters.py            # Exporteurs Markdown et JSON
+├── reports/                        # Dossier de sauvegarde des rapports quotidiens
+│   └── cache/                      # Cache local Understat, FotMob & Football-Data.org
+└── tests/                          # 41 tests unitaires et d'intégration validés
 ```
 
 ---
@@ -93,30 +103,43 @@ cp .env.example .env
 ```
 Éditez le fichier `.env` :
 ```ini
-# Clé API gratuite sur https://the-odds-api.com (500 requêtes/mois)
-ODDS_API_KEY=votre_cle_api_ici
+# Clé API The Odds API (Gratuit : 500 requêtes/mois sur https://the-odds-api.com)
+ODDS_API_KEY=votre_cle_the_odds_api_ici
+
+# Clé API Football-Data.org (Gratuit : https://www.football-data.org/client/register)
+FOOTBALL_DATA_API_KEY=votre_cle_football_data_ici
 
 BOOKMAKER=winamax
-COMPETITIONS=soccer_france_ligue_one,soccer_epl,soccer_uefa_champs_league
+COMPETITIONS=soccer_uefa_nations_league,soccer_france_ligue_one,soccer_epl,soccer_spain_la_liga,soccer_italy_serie_a,soccer_germany_bundesliga,soccer_uefa_champs_league,soccer_uefa_europa_league
 MARKETS=h2h,totals
 
 TOTAL_BANKROLL=500.0
 KELLY_FRACTION=0.50
 MIN_STAKE=1.0
 MAX_STAKE=20.0
-MIN_EV_THRESHOLD=0.0
+MIN_EV_THRESHOLD=0.005
+MIN_ODDS=1.50
+MAX_ODDS=3.00
+MIN_PROB_THRESHOLD=0.40
+MIN_PROB_LOW_ODDS=0.60
+
+PARLAY_MIN_PROB=0.60
+PARLAY_MIN_ODDS=1.80
+PARLAY_MAX_ODDS=4.00
+PARLAY_MAX_STAKE=15.0
+PARLAY_KELLY_FRACTION=0.35
 
 SCHEDULE_INTERVAL_HOURS=6
 SIMULATION_MODE=false
 ```
 
-> **Note :** Si aucune clé API n'est renseignée, l'agent bascule automatiquement en mode **Simulation/Démonstration** avec des cotes Winamax réalistes pour tester immédiatement le pipeline.
+> **Note :** Si aucune clé API n'est renseignée, l'agent bascule automatiquement en mode **Simulation/Démonstration** avec des fixtures et cotes Winamax réalistes (Ligue des Nations, L1, PL, UCL) pour tester immédiatement le pipeline.
 
 ---
 
 ## 💻 4. Utilisation
 
-### Exécution unique (Analyse immédiate)
+### Exécution unique (Génération des rapports Section A et Section B)
 ```bash
 python3 -m winamax_agent.cli --run-once
 ```
@@ -128,7 +151,7 @@ python3 -m winamax_agent.cli --demo
 
 ### Paramétrer la Bankroll et le seuil d'EV en ligne de commande
 ```bash
-python3 -m winamax_agent.cli --bankroll 1000 --min-ev 0.05 --kelly-fraction 0.50
+python3 -m winamax_agent.cli --bankroll 1000 --min-ev 0.005 --kelly-fraction 0.50
 ```
 
 ### Mode Planifié (Worker autonome toutes les 6 heures)
@@ -138,52 +161,68 @@ python3 -m winamax_agent.cli --schedule --interval-hours 6
 
 ---
 
-## 📊 5. Format de Sortie Généré
+## 📊 5. Format de Sortie Généré (`latest_report.md`)
 
-L'agent affiche un rapport console et produit automatiquement deux fichiers dans `reports/` :
-1. `reports/latest_report.md` (Markdown lisible avec tableaux et alertes).
+L'agent produit automatiquement deux fichiers dans `reports/` :
+1. `reports/latest_report.md` (Markdown structuré avec Section A et Section B).
 2. `reports/latest_report.json` (JSON structuré pour intégration bot Discord/Telegram/Webhook).
 
-### Exemple d'affichage console :
-```text
-================================================================================
- 🎯 WINAMAX VALUE BETTING AGENT - RAPPORT QUOTIDIEN D'AIDE À LA DÉCISION
- Date d'analyse : 2026-10-06 10:19:41
- Marchés analysés : 25 sur 5 rencontres | Opportunités EV > 0 : 11
-================================================================================
-
-🏆 RECOMMANDATION PRINCIPALE DU JOUR (MEILLEUR VALUE BET) :
-  • Match        : Arsenal vs Chelsea (Premier League)
-  • Coup d'envoi : 2026-10-07T17:30:00Z
-  • Marché       : 1X2 (Résultat)
-  • Pari retenu  : Victoire Arsenal (1)
-  • Cote Winamax : 1.88
-
-📊 ANALYSE QUANTITATIVE & PROBABILITÉS :
-  • Probabilité brute Winamax (avec marge) : 53.2%
-  • Probabilité fair Winamax (sans marge)  : 51.2%
-  • Probabilité réelle estimée (Modèle xG) : 64.2%
-  • Avantage estimé (Edge)                 : +13.01%
-  • Espérance de gain (Expected Value - EV): +20.71% (STRICTEMENT POSITIVE)
-
-💰 GESTION DE MISE & BANKROLL (STAKING) :
-  • MISE EXACTE CONSEILLÉE : 20.00 €
-  • Justification sizing   : Pari à valeur (EV: 20.71%). Demi-Kelly appliqué (50%). Plafond strict de 20.00 € atteint.
-
-🔍 JUSTIFICATION ANALYTIQUE EN 3 POINTS CLÉS :
-  1. [xG & Métriques avancées] :
-     Métrique xG : Arsenal génère en moyenne 2.05 xG/m pour 0.75 xGA concédés (différentiel net +1.30). En face, Chelsea affiche 1.90 xG et 1.28 xGA (différentiel +0.62). L'écart de création brute valide un net ascendant statistique.
-  2. [Confrontation directe & dynamique tactique] :
-     Dynamique tactique & confrontations : Le schéma tactique confronte le volume offensif à domicile face à un bloc adverse concédant régulièrement des situations franches à l'extérieur. Les métriques d'efficacité dans les 30 derniers mètres confirment un avantage structurel sur ce profil de match.
-  3. [Contexte d'équipe, absences & dynamique] :
-     Contexte d'équipe & forme récente : Arsenal totalise 13/15 pts récents (effectif quasi au complet, indice fatigue 30%), contre 10/15 pts pour Chelsea (absences pesant sur le rendement). Le différentiel de fraîcheur physique et de dynamique valide l'espérance de gain.
-```
+### Structure du Rapport Quotidien :
+- **Section A : Meilleur Pari Simple (Sweet Spot [1.50, 3.00])**
+  * Événement, marché et cote Winamax.
+  * Probabilité sans marge, probabilité réelle estimée (Modèle Dixon-Coles xG + ancrage marché), Edge et EV.
+  * Mise Kelly 50% avec paliers de risque (10 € à 20 € max pour cotes 1.50-1.85, 10 € max pour 1.86-2.30, 5 € max pour 2.31-3.00).
+  * Justification analytique en 3 points : xG réels Understat, confrontations/tactique, forme récente Football-Data.org.
+- **Section B : Meilleur Combiné du Jour (2 à 3 matchs, Cote totale [1.80, 4.00])**
+  * Sélections sur matchs strictement distincts (indépendance statistique).
+  * Sélections sécurisées à haute probabilité individuelle ($P_{\text{modèle}} \ge 60\%$, ex: 1X, X2, Over 1.5).
+  * Cote combinée totale, probabilité combinée cumulée et EV combinée positive.
+  * Staking Kelly combiné fractionnaire plafonné strictement à 15.00 € max.
+  * Justification croisée de corrélation et indépendance statistique.
+- **Opportunités secondaires :** Paris simples et combinés alternatifs à espérance positive (EV > 0.5%).
 
 ---
 
-## ⚙️ 6. Déploiement en Production
+## 📲 6. Automatisation Cloud & Notifications Discord (Sans PC allumé)
 
-### Option A : Service Linux Systemd (Recommandé sur VPS)
+Pour exécuter l'agent chaque jour **gratuitement dans le cloud** et recevoir les recommandations directement sur votre smartphone via Discord (sans laisser de machine allumée), le projet intègre un workflow **GitHub Actions** (`.github/workflows/daily_bet.yml`).
+
+### 📌 Les 3 étapes de configuration :
+
+#### Étape 1 : Pousser le projet sur votre dépôt GitHub
+Si votre dépôt local n'est pas encore lié à votre compte GitHub (idéalement un dépôt privé pour sécuriser vos stratégies) :
+```bash
+git add .
+git commit -m "feat: agent decisionnel, notifications discord et github actions"
+git remote add origin https://github.com/<votre-utilisateur>/<votre-depot>.git
+git branch -M main
+git push -u origin main
+```
+
+#### Étape 2 : Configurer les Secrets GitHub du dépôt
+Rendez-vous sur l'interface GitHub de votre projet :
+1. Allez dans l'onglet **Settings** > **Secrets and variables** > **Actions**.
+2. Cliquez sur **New repository secret** et enregistrez les 3 variables suivantes :
+   * `ODDS_API_KEY` : Votre clé The Odds API (ex: `b9c8...`).
+   * `FOOTBALL_DATA_API_KEY` : Votre clé Football-Data.org.
+   * `DISCORD_WEBHOOK_URL` : L'URL du webhook de votre salon Discord privé *(dans Discord : Paramètres du salon > Intégrations > Webhooks > Nouveau webhook > Copier l'URL)*.
+
+> [!NOTE]
+> En cas d'absence de webhook, le moteur s'exécute normalement sans planter et génère les fichiers `reports/latest_report.md` et `reports/latest_report.json` téléchargeables dans les artefacts GitHub Actions.
+
+#### Étape 3 : Activer et Tester l'Exécution
+1. Rendez-vous dans l'onglet **Actions** de votre dépôt GitHub.
+2. Sélectionnez le workflow **Daily Winamax Value Betting Analysis**.
+3. Cliquez sur **Run workflow** pour lancer une première exécution manuelle immédiate.
+4. Le workflow s'exécutera désormais **automatiquement tous les jours à 10h00 UTC (12h00 heure de Paris)** et publiera l'Embed complet sur votre téléphone :
+   * 🟢 **Opportunités validées** ($EV > 0$) avec mise Kelly calculée.
+   * 🟡 **Choix de secours** avec alerte explicite et mise symbolique bridée à 1,00 €.
+
+---
+
+## ⚙️ 7. Déploiements Alternatifs (VPS, Systemd, Docker, Cron Local)
+
+### Option A : Service Linux Systemd (Sur VPS personnel)
 1. Copier le fichier de service :
 ```bash
 sudo cp winamax-agent.service /etc/systemd/system/
@@ -198,16 +237,16 @@ sudo systemctl enable --now winamax-agent.service
 journalctl -u winamax-agent.service -f
 ```
 
-### Option B : Tâche Cron (ex: scan tous les jours à 09h00 et 14h00)
+### Option B : Tâche Cron Locale (ex: scan tous les jours à 12h00)
 ```bash
 crontab -e
 ```
 Ajouter la ligne suivante :
 ```cron
-0 9,14 * * * /home/bastien/winamax_agent/.venv/bin/python3 -m winamax_agent.cli --run-once >> /home/bastien/winamax_agent/reports/cron.log 2>&1
+0 12 * * * /usr/bin/python3 -m winamax_agent.cli --run-once >> /home/bastien/winamax_agent/reports/cron.log 2>&1
 ```
 
-### Option C : Docker
+### Option C : Conteneur Docker
 ```bash
 docker build -t winamax-agent .
 docker run -d --name winamax-worker --env-file .env -v $(pwd)/reports:/app/reports winamax-agent
@@ -215,10 +254,12 @@ docker run -d --name winamax-worker --env-file .env -v $(pwd)/reports:/app/repor
 
 ---
 
-## 🧪 7. Tests Unitaires & Intégration
+## 🧪 8. Tests Unitaires & Intégration
 
-L'ensemble de la suite de tests valide la cohérence des calculs de marge, la formule de Kelly (plancher/plafond/EV<=0) et la simulation Dixon-Coles :
+L'ensemble de la suite de **41 tests unitaires et d'intégration** valide l'intégralité du pipeline mathématique, des intégrations d'API, de la génération d'Embed Discord et des modes de secours :
 ```bash
 python3 -m unittest discover -s tests -p "test_*.py"
 ```
-Résultat : **15 tests validés à 100%**.
+Résultat : **41 tests validés avec succès (OK)**.
+
+

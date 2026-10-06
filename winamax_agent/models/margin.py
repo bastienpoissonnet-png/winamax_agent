@@ -111,3 +111,4 @@ def analyze_market_margin(odds: Dict[str, float]) -> MarginAnalysis:
         fair_probs_multiplicative=fair_mult,
         fair_probs_power=fair_power,
     )
+

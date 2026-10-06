@@ -13,3 +13,4 @@ EnvironmentFile=/home/bastien/winamax_agent/.env
 
 [Install]
 WantedBy=multi-user.target
+
