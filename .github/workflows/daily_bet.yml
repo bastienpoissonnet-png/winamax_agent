@@ -2,8 +2,8 @@ name: Daily Winamax Value Betting Analysis
 
 on:
   schedule:
-    # Déclenchement automatique tous les jours à 10h00 UTC (12h00 heure de Paris)
-    - cron: '0 10 * * *'
+    # Déclenchement automatique tous les jours à 10h14 UTC (12h14 heure de Paris)
+    - cron: '14 10 * * *'
   workflow_dispatch: # Déclenchement manuel à la demande depuis l'interface GitHub
 
 jobs:
